@@ -37,11 +37,40 @@ goto:$Command
     endlocal & exit /b
 :$Command
 
+:Sudo
+    call gsudo status IsElevated --no-output && goto:$IsElevated
+    call :Command gsudo cache on
+    goto:$IsElevated
+
+    :$IsElevated
+    call :Command gsudo %*
+exit /b %ERRORLEVEL%
+
+:TrySudo
+    call gsudo status IsElevated --no-output && goto:$TryIsElevated
+    echo Skipped 'gsudo' as we are not elevated.
+    exit /b 0
+
+    :$TryIsElevated
+    call :Command gsudo %*
+    goto:$TrySudoDone
+
+    :$TrySudoDone
+exit /b %ERRORLEVEL%
+
+:Cleanup
+    call gsudo status IsElevated --no-output && goto:$CleanupIsElevated
+    goto:$CleanupDone
+
+    :$CleanupIsElevated
+    call :Command gsudo cache off
+
+    :$CleanupDone
+exit /b %ERRORLEVEL%
+
 :$Main
 setlocal EnableExtensions
-    call :Command sudo cache on
-
-    call :Command sudo py -3 -m pip install --no-warn-script-location --upgrade pip
+    call :TrySudo py -3 -m pip install --no-warn-script-location --upgrade pip
     if errorlevel 1 goto:$MainError
     call :Command py -3 -m pip install --upgrade --user --no-warn-script-location -r "%~dp0requirements.txt"
     if errorlevel 1 goto:$MainError
@@ -69,10 +98,12 @@ setlocal EnableExtensions
     call :Command poetry run ruff .
     if errorlevel 1 goto:$MainError
 
+    call :Command docker pull "ghcr.io/catthehacker/ubuntu:full-latest"
+    call :Command act --pull=false
     :$MainError
         echo [Error] Error during setup. Error level: '%ERRORLEVEL%'
         goto:$MainDone
 
     :$MainDone
-    call :Command sudo cache off
+    call :Cleanup
 endlocal & exit /b %ERRORLEVEL%
