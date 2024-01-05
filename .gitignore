@@ -1,7 +1,10 @@
 # python files
-__pycache__/
-*.pyc
 .venv/
+__pycache__/
+.pytest_cache/
+__pycache__/
+.mypy_cache/
+*.pyc
 
 # pyinstaller files
 dist/
@@ -10,4 +13,3 @@ build/
 
 # pytest-cov files
 .coverage
-.pytest_cache/

@@ -1,10 +1,16 @@
-pathlib>=1.0.1; python_version < '3.4'
-# development
+black
 invoke>=0.13.0
-virtualenv>=15.0.3
+mock
+poethepoet
+poetry
+pre-commit
 pylint>=1.5.5
-pytest>=2.9.1
 pytest-cov>=2.4.0
+pytest-github-actions-annotate-failures
+pytest>=2.9.1
 radon>=1.4.2
-# deployment
+ruff
 setuptools>=23.1.0
+toml
+virtualenv>=15.0.3
+wheel
