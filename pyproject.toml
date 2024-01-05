@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "dploy"
 version = "0.1.3-beta"
@@ -34,11 +38,25 @@ ruff = "^0.1.11"
 [tool.poetry.dev-dependencies]
 pytest = ">=4.6"
 pytest-cov = ">=2.6.0"
-pylint = "^2.0"
+pylint = "^3.0"
 radon = ">=2.0.3"
-invoke = "^1.0"
+invoke = "^2.0"
 black = "^21.9b0"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.pylint]
+max-line-length = 120
+ignore-patterns = [
+    "(?:.*[/\\\\]|^)(?:site-packages|__pycache__|\\.venv|\\.mypy_cache|\\.pytest_cache|\\.ruff_cache)(?:[/\\\\]|$)"
+]
+
+[tool.pylint.message_control]
+disable = [
+    "locally-disabled",
+    "duplicate-code",
+    "len-as-condition",
+    "unnecessary-pass",
+    "consider-using-f-string"
+]
+
+[tool.pylint.reports]
+reports = false
