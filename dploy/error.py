@@ -1,9 +1,17 @@
 """
 All the exceptions and their messages used by the program
 """
+import re
 import sys
 
 ERROR_HEAD = "dploy {subcmd}: can not {subcmd} "
+
+
+def as_match(error):
+    """
+    Returns a regex match for the error
+    """
+    return re.escape(str(error))
 
 
 class Errors:
@@ -30,10 +38,6 @@ class Errors:
                 for exception in self.exceptions:
                     print(exception, file=sys.stderr)
             raise self.exceptions[0]
-
-
-# pylint: disable=missing-docstring
-# pylint: disable=too-few-public-methods
 
 
 class DployError(Exception):
