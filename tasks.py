@@ -3,7 +3,8 @@ Project Tasks that can be invoked using using the program "invoke" or "inv"
 """
 
 import os
-from invoke import task
+
+from invoke import task  # type: ignore
 
 # disable the check for unused-arguments to ignore unused ctx parameter in tasks
 # pylint: disable=unused-argument

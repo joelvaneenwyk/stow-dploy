@@ -42,11 +42,13 @@ class Errors:
 
 class DployError(Exception):
     """Base error exception for package."""
+
     pass
 
 
 class SourceIsSameAsDest(DployError):
     """A source argument is the same as the dest argument"""
+
     def __init__(self, subcmd, file):
         self.msg = (
             ERROR_HEAD + "'{file}': A source argument is the same as the dest argument"
@@ -60,6 +62,7 @@ class SourceIsSameAsDest(DployError):
 
 class ConflictsWithAnotherSource(DployError):
     """the following: Conflicts with other source files"""
+
     def __init__(self, subcmd, files):
         self.msg = ERROR_HEAD + "the following: Conflicts with other source {files}"
         files_list = "\n    " + "\n    ".join(files)
@@ -72,6 +75,7 @@ class ConflictsWithAnotherSource(DployError):
 
 class ConflictsWithExistingFile(DployError):
     """Source Conflicts with existing file at destination"""
+
     def __init__(self, subcmd, source, dest):
         self.msg = ERROR_HEAD + "'{source}': Conflicts with existing file '{dest}'"
         self.msg = self.msg.format(subcmd=subcmd, source=source, dest=dest)
@@ -83,6 +87,7 @@ class ConflictsWithExistingFile(DployError):
 
 class ConflictsWithExistingLink(DployError):
     """Source Conflicts with existing symlink at destination"""
+
     def __init__(self, subcmd, source, dest):
         self.msg = ERROR_HEAD + "'{source}': Conflicts with existing symlink '{dest}'"
         self.msg = self.msg.format(subcmd=subcmd, source=source, dest=dest)
@@ -94,6 +99,7 @@ class ConflictsWithExistingLink(DployError):
 
 class InsufficientPermissions(DployError):
     """Insufficient permissions"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "'{file}': Insufficient permissions"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -105,6 +111,7 @@ class InsufficientPermissions(DployError):
 
 class NoSuchDirectory(DployError):
     """No such directory"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "'{file}': No such directory"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -116,6 +123,7 @@ class NoSuchDirectory(DployError):
 
 class PermissionDenied(DployError):
     """Permission denied"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "'{file}': Permission denied"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -127,6 +135,7 @@ class PermissionDenied(DployError):
 
 class InsufficientPermissionsToSubcmdFrom(DployError):
     """from Insufficient permissions"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "from '{file}': Insufficient permissions"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -138,6 +147,7 @@ class InsufficientPermissionsToSubcmdFrom(DployError):
 
 class NoSuchDirectoryToSubcmdInto(DployError):
     """into No such directory"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "into '{file}': No such directory"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -149,6 +159,7 @@ class NoSuchDirectoryToSubcmdInto(DployError):
 
 class InsufficientPermissionsToSubcmdTo(DployError):
     """to Insufficient permissions"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "to '{file}': Insufficient permissions"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -160,6 +171,7 @@ class InsufficientPermissionsToSubcmdTo(DployError):
 
 class NoSuchFileOrDirectory(DployError):
     """No such file or directory"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "'{file}': No such file or directory"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
@@ -171,6 +183,7 @@ class NoSuchFileOrDirectory(DployError):
 
 class DuplicateSource(DployError):
     """Duplicate source argument"""
+
     def __init__(self, subcmd, file):
         self.msg = ERROR_HEAD + "'{file}': Duplicate source argument"
         self.msg = self.msg.format(subcmd=subcmd, file=file)

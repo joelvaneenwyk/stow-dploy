@@ -10,8 +10,9 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
 
 StowPath = Union[os.PathLike[str], str, Path]
-StowTreeNode = Union[Dict[str, "StowTreeNode"], List["StowTreeNode"], StowPath]
-StowTree = List[StowTreeNode]
+StowTreeIterable = Union[Dict[str, "StowTreeNode"], List["StowTreeNode"]]
+StowTreeNode = Union[StowTreeIterable, StowPath]
+StowTree = StowTreeNode
 StowSources = Iterable[StowPath]
 StowIgnorePatterns = Optional[Iterable[str]]
 

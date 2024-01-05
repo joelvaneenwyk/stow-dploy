@@ -65,16 +65,20 @@ def create_tree(tree: StowTree) -> None:
     """
     create an file and directory tree
     """
-    for branch in tree:
-        if isinstance(branch, str):
-            create_file(branch)
-
-        elif isinstance(branch, dict):
-            for directory, file_objs in branch.items():
+    try:
+        if isinstance(tree, str) or isinstance(tree, Path):
+            create_file(tree)
+        elif isinstance(tree, list):
+            for branch in tree:
+                create_tree(branch)
+        elif isinstance(tree, dict):
+            for directory, file_objs in tree.items():
                 create_directory(directory)
 
                 with ChangeDirectory(directory):
                     create_tree(file_objs)
+    except TypeError:
+        pass
 
 
 def remove_read_permission(path: StowPath):
