@@ -1,14 +1,39 @@
 {
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false,
+        "gitlens.codeLens.symbolScopes": [
+            "!Module"
+        ],
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+        "editor.formatOnType": true,
+        "editor.wordBasedSuggestions": "allDocuments"
+    },
     "cSpell.words": [
+        "abatilo",
+        "capsys",
+        "catthehacker",
         "corepack",
         "dploy",
+        "dploystowignore",
         "endlocal",
         "ERRORLEVEL",
+        "etype",
+        "OSFS",
         "pipx",
+        "setinfo",
         "setlocal",
         "setuptools",
         "subcmd",
-        "unstow"
+        "subdest",
+        "subdests",
+        "subsources",
+        "unstow",
+        "unstowed",
+        "virtualenvs"
     ],
     "python.testing.pytestArgs": [
         "tests"
