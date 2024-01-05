@@ -1,16 +1,16 @@
 {
     "[python]": {
         "diffEditor.ignoreTrimWhitespace": false,
-        "gitlens.codeLens.symbolScopes": [
-            "!Module"
-        ],
-        "editor.defaultFormatter": "charliermarsh.ruff",
-        "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
             "source.organizeImports": "explicit"
         },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
         "editor.formatOnType": true,
-        "editor.wordBasedSuggestions": "allDocuments"
+        "editor.wordBasedSuggestions": "allDocuments",
+        "gitlens.codeLens.symbolScopes": [
+            "!Module"
+        ]
     },
     "cSpell.words": [
         "abatilo",
@@ -23,11 +23,13 @@
         "ERRORLEVEL",
         "etype",
         "gsudo",
+        "linkcmd",
         "OSFS",
         "pipx",
         "setinfo",
         "setlocal",
         "setuptools",
+        "stowcmd",
         "subcmd",
         "subdest",
         "subdests",
@@ -36,9 +38,10 @@
         "unstowed",
         "virtualenvs"
     ],
+    "python.analysis.typeCheckingMode": "basic",
     "python.testing.pytestArgs": [
         "tests"
     ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false
 }
