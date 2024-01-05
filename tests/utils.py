@@ -7,6 +7,14 @@ import shutil
 import stat
 from pathlib import Path
 
+import fs
+import fs.osfs
+
+StowPath = os.PathLike[str] | str | Path
+StowLeaf = StowPath
+StowTreeNode = dict[str, "StowTreeNode"] | list["StowTreeNode"] | StowLeaf
+StowTree = list[StowTreeNode]
+
 
 def remove_tree(tree):
     """
@@ -55,7 +63,7 @@ class ChangeDirectory:
         os.chdir(self.saved_path)
 
 
-def create_tree(tree):
+def create_tree(tree: StowTree) -> None:
     """
     create an file and directory tree
     """
@@ -71,15 +79,19 @@ def create_tree(tree):
                     create_tree(file_objs)
 
 
-def remove_read_permission(path):
+def remove_read_permission(path: StowPath):
     """
     change users permissions to a path to write only
     """
-    mode = os.stat(path)[stat.ST_MODE]
-    os.chmod(path, mode & ~stat.S_IRUSR & ~stat.S_IRGRP & ~stat.S_IROTH)
+    input_path_item = Path(path)
+    os_file_system = fs.osfs.OSFS(input_path_item.root)
+    os_path_info = os_file_system.getinfo(str(input_path_item))
+    if os_path_info.permissions:
+        os_path_info.permissions.remove("u_r", "g_r", "o_r")
+        os_file_system.setinfo(str(input_path_item), os_path_info.raw)
 
 
-def add_read_permission(path):
+def add_read_permission(path: StowPath):
     """
     change users permissions to a path to write only
     """
@@ -87,7 +99,7 @@ def add_read_permission(path):
     os.chmod(path, mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
 
-def remove_write_permission(path):
+def remove_write_permission(path: StowPath):
     """
     change users permissions to a path to read only
     """
@@ -95,7 +107,7 @@ def remove_write_permission(path):
     os.chmod(path, mode & ~stat.S_IWUSR & ~stat.S_IWGRP & ~stat.S_IWOTH)
 
 
-def remove_execute_permission(path):
+def remove_execute_permission(path: StowPath):
     """
     change users permissions to a path to read only
     """
@@ -103,7 +115,7 @@ def remove_execute_permission(path):
     os.chmod(path, mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH)
 
 
-def restore_tree_permissions(top_directory: os.PathLike) -> None:
+def restore_tree_permissions(top_directory: StowPath) -> None:
     """Reset users's permissions on a directory tree."""
     top_directory_path = Path(top_directory)
     if not top_directory_path.is_dir():
@@ -116,7 +128,7 @@ def restore_tree_permissions(top_directory: os.PathLike) -> None:
             add_user_permissions(Path(current_dir).joinpath(file_name))
 
 
-def add_user_permissions(path: os.PathLike) -> None:
+def add_user_permissions(path: StowPath) -> None:
     """Restore owner's file/dir permissions."""
     if not os.path.exists(path) and not os.path.islink(path):
         raise FileNotFoundError(f"Invalid file or directory: {path}")

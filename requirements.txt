@@ -16,3 +16,4 @@ virtualenv>=15.0.3
 wheel
 lexicon
 invoke>=2.2.0
+fs>=2.0.0
