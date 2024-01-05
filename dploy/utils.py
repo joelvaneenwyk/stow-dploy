@@ -6,13 +6,21 @@ missing from the pathlib module.
 import os
 import pathlib
 import shutil
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Union
+
+StowPath = Union[os.PathLike[str], str, Path]
+StowTreeNode = Union[Dict[str, "StowTreeNode"], List["StowTreeNode"], StowPath]
+StowTree = List[StowTreeNode]
+StowSources = Iterable[StowPath]
+StowIgnorePatterns = Optional[Iterable[str]]
 
 
-def get_directory_contents(directory):
+def get_directory_contents(directory: Path) -> list[Path]:
     """
     return a sorted list of the contents of a directory
     """
-    contents = []
+    contents: list[Path] = []
 
     for child in directory.iterdir():
         contents.append(child)
@@ -20,7 +28,7 @@ def get_directory_contents(directory):
     return sorted(contents)
 
 
-def rmtree(tree):
+def rmtree(tree: StowPath):
     """
     a wrapper around shutil.rmtree to recursively delete a directory specified
     by a pathlib.Path object
@@ -28,7 +36,7 @@ def rmtree(tree):
     shutil.rmtree(str(tree))
 
 
-def is_same_file(file1, file2):
+def is_same_file(file1: Path, file2: Path) -> bool:
     """
     test if two pathlib.Path() objects are the same file
 
@@ -38,7 +46,7 @@ def is_same_file(file1, file2):
     return file1.resolve() == file2.resolve()
 
 
-def is_same_files(files1, files2):
+def is_same_files(files1: list[Path], files2: list[Path]) -> bool:
     """
     test if two collection of files are equivalent
     """
@@ -47,7 +55,7 @@ def is_same_files(files1, files2):
     return files1_resolved == files2_resolved
 
 
-def get_absolute_path(file):
+def get_absolute_path(file: StowPath) -> Path:
     """
     get the absolute path of a pathlib.Path() object
     """
@@ -55,7 +63,7 @@ def get_absolute_path(file):
     return pathlib.Path(absolute_path)
 
 
-def get_relative_path(path, start_at):
+def get_relative_path(path: StowPath, start_at: StowPath) -> Path:
     """
     get the relative path of a pathlib.Path() object
 
@@ -70,42 +78,42 @@ def get_relative_path(path, start_at):
     return pathlib.Path(relative_path)
 
 
-def is_file_readable(a_file):
+def is_file_readable(a_file: StowPath) -> bool:
     """
     check if a pathlib.Path() file is readable
     """
     return os.access(str(a_file), os.R_OK)
 
 
-def is_file_writable(a_file):
+def is_file_writable(a_file: StowPath) -> bool:
     """
     check if a pathlib.Path() file is writable
     """
     return os.access(str(a_file), os.W_OK)
 
 
-def is_directory_readable(directory):
+def is_directory_readable(directory: StowPath) -> bool:
     """
     check if a pathlib.Path() directory is readable
     """
     return os.access(str(directory), os.R_OK)
 
 
-def is_directory_writable(directory):
+def is_directory_writable(directory: StowPath) -> bool:
     """
     check if a pathlib.Path() directory is writable
     """
     return os.access(str(directory), os.W_OK)
 
 
-def is_directory_executable(directory):
+def is_directory_executable(directory: StowPath) -> bool:
     """
     check if a pathlib.Path() directory is executable
     """
     return os.access(str(directory), os.X_OK)
 
 
-def readlink(path, absolute_target=False):
+def readlink(path: StowPath, absolute_target: bool = False) -> Path:
     """
     get the target of a symbolic link passed as a pathlib.Path object and
     provide the option to return an absolute path even if the link target is

@@ -12,22 +12,22 @@ import dploy
 SUBCMD = "stow"
 
 
-def test_ignore_by_ignoring_everything(source_a, source_c, dest):
+def test_ignore_by_ignoring_everything(source_a: str, source_c: str, dest: str):
     dploy.stow([source_a, source_c], dest, ignore_patterns=["*"])
     assert not os.path.exists(os.path.join(dest, "aaa"))
 
 
-def test_ignore_by_ignoring_only_subdirectory(source_a, source_c, dest):
+def test_ignore_by_ignoring_only_subdirectory(source_a: str, source_c: str, dest: str):
     dploy.stow([source_a, source_c], dest, ignore_patterns=["aaa"])
     assert not os.path.exists(os.path.join(dest, "aaa"))
 
 
-def test_ignore_by_ignoring_everything_(source_a, source_c, dest):
+def test_ignore_by_ignoring_everything_(source_a: str, source_c: str, dest: str):
     dploy.stow([source_a, source_c], dest, ignore_patterns=["source_*/aaa"])
     assert not os.path.exists(os.path.join(dest, "aaa"))
 
 
-def test_ignore_by_ignoring_everything__(source_a, source_c, dest):
+def test_ignore_by_ignoring_everything__(source_a: str, source_c: str, dest: str):
     dploy.stow([source_a, source_c], dest, ignore_patterns=["*/aaa"])
     assert not os.path.exists(os.path.join(dest, "aaa"))
 

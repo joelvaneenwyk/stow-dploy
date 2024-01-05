@@ -145,41 +145,35 @@ def source_only_files(tmp_path: Path) -> Generator[str, None, None]:
 
 
 @pytest.fixture()
-def dest(tmpdir) -> Generator[str, None, None]:
+def dest(tmp_path: Path) -> Generator[str, None, None]:
     """
     a destination directory to stow into or unstow from
     """
-    name = str(tmpdir.join("dest"))
+    name = str(tmp_path.joinpath("dest"))
     utils.create_directory(name)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def file_a(tmpdir):
+def file_a(tmp_path: Path) -> str:
     """
     creates a file
     """
-    name = str(tmpdir.join("file_a"))
-    utils.create_file(name)
-    return name
+    return utils.create_file(tmp_path.joinpath("file_a"))
 
 
 @pytest.fixture()
-def file_b(tmpdir):
+def file_b(tmp_path: Path) -> str:
     """
     creates a file
     """
-    name = str(tmpdir.join("file_b"))
-    utils.create_file(name)
-    return name
+    return utils.create_file(tmp_path.joinpath("file_b"))
 
 
 @pytest.fixture()
-def file_dploystowignore(tmpdir):
+def file_dploystowignore(tmp_path: Path) -> str:
     """
     creates an empty ignore file file
     """
-    name = str(tmpdir.join(".dploystowignore"))
-    utils.create_file(name)
-    return name
+    return utils.create_file(tmp_path.joinpath(".dploystowignore"))

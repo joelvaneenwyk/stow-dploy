@@ -10,13 +10,10 @@ from pathlib import Path
 import fs
 import fs.osfs
 
-StowPath = os.PathLike[str] | str | Path
-StowLeaf = StowPath
-StowTreeNode = dict[str, "StowTreeNode"] | list["StowTreeNode"] | StowLeaf
-StowTree = list[StowTreeNode]
+from dploy.utils import StowPath, StowTree
 
 
-def remove_tree(tree):
+def remove_tree(tree: StowPath):
     """
     reset the permission of a file and directory tree and remove it
     """
@@ -24,7 +21,7 @@ def remove_tree(tree):
     shutil.rmtree(tree)
 
 
-def remove_file(file_name):
+def remove_file(file_name: StowPath):
     """
     reset the permission of a file and remove it
     """
@@ -32,14 +29,15 @@ def remove_file(file_name):
     os.remove(file_name)
 
 
-def create_file(file_name):
+def create_file(file_name: StowPath) -> str:
     """
     create an file
     """
-    return open(file_name, "w", encoding="utf8").close()
+    open(file_name, "w", encoding="utf8").close()
+    return str(file_name)
 
 
-def create_directory(directory_name):
+def create_directory(directory_name: StowPath):
     """
     create an directory
     """
@@ -52,7 +50,7 @@ class ChangeDirectory:
     Context manager for changing the current working directory
     """
 
-    def __init__(self, new_path):
+    def __init__(self, new_path: StowPath):
         self.new_path = os.path.expanduser(new_path)
         self.saved_path = os.getcwd()
 
