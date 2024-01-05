@@ -46,7 +46,7 @@ class Actions:
         """
         unlink_actions = self.get_unlink_actions()
         # sort for deterministic output
-        return sorted(set([a.target.parent for a in unlink_actions]))
+        return sorted({a.target.parent for a in unlink_actions})
 
     def get_unlink_targets(self):
         """

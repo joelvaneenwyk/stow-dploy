@@ -219,7 +219,7 @@ def test_unstow_folding_with_multiple_sources_all_unstowed(source_a, source_b, d
 
 
 def test_unstow_folding_with_existing_file_in_dest(source_a, source_b, dest):
-    os.mkdir(os.path.join(dest, "aaa"))
+    os.makedirs(os.path.join(dest, "aaa"))
     a_file = os.path.join(dest, "aaa", "a_file")
     utils.create_file(a_file)
     dploy.stow([source_a, source_b], dest)

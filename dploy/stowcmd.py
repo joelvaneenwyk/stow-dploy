@@ -427,8 +427,8 @@ class Clean(main.AbstractBaseSubCommand):
             if self.ignore.should_ignore(a_file):
                 self.ignore.ignore(a_file)
                 continue
-            else:
-                valid_files.append(a_file)
+
+            valid_files.append(a_file)
 
             if not StowInput(self.errors, self.subcmd).is_valid_collection_input(
                 a_file, self.dest

@@ -3,9 +3,10 @@ Contains utilities used during testing
 """
 
 import os
-import stat
 import shutil
-import pathlib
+import stat
+from pathlib import Path
+
 
 def remove_tree(tree):
     """
@@ -27,7 +28,7 @@ def create_file(file_name):
     """
     create an file
     """
-    return open(file_name, "w").close()
+    return open(file_name, "w", encoding="utf8").close()
 
 
 def create_directory(directory_name):
@@ -104,13 +105,15 @@ def remove_execute_permission(path):
 
 def restore_tree_permissions(top_directory: os.PathLike) -> None:
     """Reset users's permissions on a directory tree."""
-    if not os.path.isdir(top_directory):
+    top_directory_path = Path(top_directory)
+    if not top_directory_path.is_dir():
         raise NotADirectoryError(f"Invalid directory: {top_directory}")
 
-    add_user_permissions(top_directory)
-    for current_dir, dirs, files in pathlib.Path(top_directory).walk():
+    add_user_permissions(top_directory_path)
+
+    for current_dir, dirs, files in os.walk(top_directory_path):
         for file_name in dirs + files:
-            add_user_permissions(current_dir.joinpath(file_name))
+            add_user_permissions(Path(current_dir).joinpath(file_name))
 
 
 def add_user_permissions(path: os.PathLike) -> None:
