@@ -6,12 +6,13 @@ Tests for the link sub command
 # pylint: disable=invalid-name
 
 import os
+
 import dploy
 
 SUBCMD = "clean"
 
 
-def test_clean_with_simple_senario(source_only_files, dest):
+def test_clean_with_simple_scenario(source_only_files, dest):
     broken = os.path.join("..", "source_only_files", "bbb")
     dest_path = os.path.join(dest, "bbb")
     os.symlink(broken, dest_path)

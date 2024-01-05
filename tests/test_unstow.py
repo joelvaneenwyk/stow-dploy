@@ -17,13 +17,13 @@ from tests import utils
 SUBCMD = "unstow"
 
 
-def test_unstow_with_basic_senario(source_a, dest):
+def test_unstow_with_basic_scenario(source_a, dest):
     dploy.stow([source_a], dest)
     dploy.unstow([source_a], dest)
     assert not os.path.exists(os.path.join(dest, "aaa"))
 
 
-def test_unstow_dwith_basic_senario_doesnt_delete_dest_directory(source_a, dest):
+def test_unstow_with_basic_scenario_does_not_delete_dest_directory(source_a, dest):
     dploy.stow([source_a], dest)
     dploy.unstow([source_a], dest)
     assert os.path.exists(dest)
@@ -127,7 +127,7 @@ def test_unstow_with_write_only_source(source_a, dest):
     utils.add_read_permission(source_a)
 
 
-def test_unstow_with_dest_with_no_executue_permissions(source_a, dest):
+def test_unstow_with_dest_with_no_execute_permissions(source_a, dest):
     dploy.stow([source_a], dest)
     utils.remove_execute_permission(dest)
     message = error.as_match(
@@ -137,7 +137,7 @@ def test_unstow_with_dest_with_no_executue_permissions(source_a, dest):
         dploy.unstow([source_a], dest)
 
 
-def test_unstow_with_dest_dir_with_no_executue_permissions(source_a, source_b, dest):
+def test_unstow_with_dest_dir_with_no_execute_permissions(source_a, source_b, dest):
     dest_dir = os.path.join(dest, "aaa")
     dploy.stow([source_a, source_b], dest)
     utils.remove_execute_permission(os.path.join(dest, "aaa"))

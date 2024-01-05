@@ -16,14 +16,14 @@ from tests import utils
 SUBCMD = "stow"
 
 
-def test_stow_with_simple_senario(source_only_files, dest):
+def test_stow_with_simple_scenario(source_only_files, dest):
     dploy.stow([source_only_files], dest)
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
         "..", "source_only_files", "aaa"
     )
 
 
-def test_stow_with_basic_senario(source_a, dest):
+def test_stow_with_basic_scenario(source_a, dest):
     dploy.stow([source_a], dest)
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
         "..", "source_a", "aaa"
@@ -154,7 +154,7 @@ def test_stow_with_write_only_source(source_a, source_c, dest):
         dploy.stow([source_a, source_c], dest)
 
 
-def test_stow_with_source_with_no_executue_permissions(source_a, source_c, dest):
+def test_stow_with_source_with_no_execute_permissions(source_a, source_c, dest):
     utils.remove_execute_permission(source_a)
     message = error.as_match(
         error.InsufficientPermissionsToSubcmdFrom(subcmd=SUBCMD, file=source_a)
@@ -163,7 +163,7 @@ def test_stow_with_source_with_no_executue_permissions(source_a, source_c, dest)
         dploy.stow([source_a, source_c], dest)
 
 
-def test_stow_with_source_dir_with_no_executue_permissions(source_a, source_c, dest):
+def test_stow_with_source_dir_with_no_execute_permissions(source_a, source_c, dest):
     source_dir = os.path.join(source_a, "aaa")
     utils.remove_execute_permission(source_dir)
     message = error.as_match(
@@ -225,7 +225,7 @@ def test_stow_unfolding_with_two_invocations(source_a, source_b, dest):
     verify_unfolded_source_a_and_source_b(dest)
 
 
-def test_stow_unfolding_with_mutliple_sources(source_a, source_b, dest):
+def test_stow_unfolding_with_multiple_sources(source_a, source_b, dest):
     dploy.stow([source_a, source_b], dest)
     verify_unfolded_source_a_and_source_b(dest)
 

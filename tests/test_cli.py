@@ -7,11 +7,13 @@ Tests for the CLI interface
 
 import os
 import re
+
 import pytest
+
 import dploy.cli
 
 
-def test_cli_with_stow_with_simple_senario(source_only_files, dest, capsys):
+def test_cli_with_stow_with_simple_scenario(source_only_files, dest, capsys):
     args = ["stow", source_only_files, dest]
     dploy.cli.run(args)
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
@@ -23,7 +25,7 @@ def test_cli_with_stow_with_simple_senario(source_only_files, dest, capsys):
     assert out == "dploy stow: link {dest} => {source}\n".format(source=s, dest=d)
 
 
-def test_cli_unstow_with_basic_senario(source_a, dest, capsys):
+def test_cli_unstow_with_basic_scenario(source_a, dest, capsys):
     args_stow = ["stow", source_a, dest]
     dploy.cli.run(args_stow)
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
@@ -58,7 +60,7 @@ def test_cli_with_link_directory(source_a, dest, capsys):
     assert output == expected_output
 
 
-def test_cli_with_dry_run_option_with_stow_with_simple_senario(
+def test_cli_with_dry_run_option_with_stow_with_simple_scenario(
     source_only_files, dest, capsys
 ):
     args = ["--dry-run", "stow", source_only_files, dest]
@@ -70,7 +72,7 @@ def test_cli_with_dry_run_option_with_stow_with_simple_senario(
     assert out == "dploy stow: link {dest} => {source}\n".format(source=s, dest=d)
 
 
-def test_cli_with_silent_option_with_stow_with_simple_senario(
+def test_cli_with_silent_option_with_stow_with_simple_scenario(
     source_only_files, dest, capsys
 ):
     args = ["--silent", "stow", source_only_files, dest]
