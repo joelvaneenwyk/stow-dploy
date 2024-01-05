@@ -45,7 +45,7 @@ def test_unstow_with_a_broken_link_dest(source_a, dest):
 
 
 def test_unstow_with_broken_link_in_dest(source_a, dest):
-    os.mkdir(os.path.join(dest, "aaa"))
+    os.makedirs(os.path.join(dest, "aaa"))
     dploy.stow([source_a], dest)
     os.symlink(
         os.path.join(source_a, "non_existant_source"),

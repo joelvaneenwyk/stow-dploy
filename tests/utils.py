@@ -5,7 +5,7 @@ Contains utilities used during testing
 import os
 import stat
 import shutil
-
+import pathlib
 
 def remove_tree(tree):
     """
@@ -108,9 +108,9 @@ def restore_tree_permissions(top_directory: os.PathLike) -> None:
         raise NotADirectoryError(f"Invalid directory: {top_directory}")
 
     add_user_permissions(top_directory)
-    for current_dir, dirs, files in os.walk(top_directory):
+    for current_dir, dirs, files in pathlib.Path(top_directory).walk():
         for file_name in dirs + files:
-            add_user_permissions(os.path.join(current_dir, file_name))
+            add_user_permissions(current_dir.joinpath(file_name))
 
 
 def add_user_permissions(path: os.PathLike) -> None:
