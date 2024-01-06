@@ -83,6 +83,12 @@ endlocal & exit /b %_return_value%
 setlocal EnableExtensions
     call :ClearError
 
+    if not "%~1"=="act" goto:$MainSkipDocker
+    call :Command docker pull "ghcr.io/catthehacker/ubuntu:full-latest"
+    call :Command act --pull=false
+    goto:$MainDone
+
+    :$MainSkipDocker
     call :TrySudo py -3 -m pip install --no-warn-script-location --upgrade pip
     if errorlevel 1 goto:$MainError
     call :Command py -3 -m pip install --upgrade --user --no-warn-script-location -r "%~dp0requirements.txt"
@@ -96,8 +102,6 @@ setlocal EnableExtensions
     if errorlevel 1 goto:$MainError
 
     set VIRTUAL_ENV_DISABLE_PROMPT=1
-    call :Command pipx run poetry shell
-    if errorlevel 1 goto:$MainError
 
     call :Command pipx run poetry run pip install --no-warn-script-location --upgrade pip setuptools wheel pytest-github-actions-annotate-failures
     if errorlevel 1 goto:$MainError
@@ -111,8 +115,9 @@ setlocal EnableExtensions
     call :Command pipx run poetry run ruff .
     if errorlevel 1 goto:$MainError
 
-    call :Command docker pull "ghcr.io/catthehacker/ubuntu:full-latest"
-    call :Command act --pull=false
+    call :Command pipx run poetry shell
+    if errorlevel 1 goto:$MainError
+
     :$MainError
         echo [Error] Error during setup. Error level: '%ERRORLEVEL%'
         goto:$MainDone

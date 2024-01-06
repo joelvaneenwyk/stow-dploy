@@ -1,5 +1,7 @@
 black
-invoke>=0.13.0
+fs>=2.0.0
+invoke>=2.2.0
+lexicon
 mock
 poethepoet
 poetry
@@ -14,8 +16,5 @@ setuptools>=23.1.0
 toml
 virtualenv>=15.0.3
 wheel
-lexicon
-invoke>=2.2.0
-fs>=2.0.0
-win32security; sys_platform == 'win32'
 pypiwin32; sys_platform == 'win32'
+win32security; sys_platform == 'win32'

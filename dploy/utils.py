@@ -146,11 +146,8 @@ def get_relative_path(path: StowPath, start_at: StowPath) -> Path:
 
 
 def _get_access(path_item: StowPath) -> fs.permissions.Permissions:
-    os_file_system, input_path_item = _get_fs(path_item)
-    access = os_file_system.getinfo(input_path_item, namespaces=["access"])
-    if access.permissions is None:
-        raise FileNotFoundError(f"Invalid file or directory: {path_item}")
-    return access.permissions
+    mode = get_mode(path_item)
+    return fs.permissions.Permissions(mode=mode)
 
 
 def is_file_readable(a_file: StowPath) -> bool:
