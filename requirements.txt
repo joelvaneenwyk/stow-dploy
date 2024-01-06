@@ -16,5 +16,9 @@ setuptools>=23.1.0
 toml
 virtualenv>=15.0.3
 wheel
-pypiwin32; sys_platform == 'win32'
-win32security; sys_platform == 'win32'
+pywin32>=306; sys_platform == 'win32'
+types-pywin32>=304.0.0.1
+types-PyYAML>=6.0.12
+types-chevron>=0.14.2
+types-psutil>=5.9.5.1
+types-setuptools>=65.4.0.0
