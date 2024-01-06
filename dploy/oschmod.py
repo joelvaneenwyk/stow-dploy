@@ -236,19 +236,8 @@ import random
 import re
 import stat
 import string
-from enum import Enum, auto
-from typing import Any, Type, TypeAlias, Union
-
-try:
-    from win32helper.win32typing import PySECURITY_DESCRIPTOR, PySID  # type: ignore
-except ImportError:
-
-    class PySID:  # type: ignore[no-redef]
-        pass
-
-    class PySECURITY_DESCRIPTOR:  # type: ignore[no-redef]
-        pass
-
+from enum import IntEnum, auto
+from typing import TYPE_CHECKING, Any, Union
 
 ModePath = Union[os.PathLike[str], pathlib.Path, str]
 ModeValue = int
@@ -256,18 +245,143 @@ ModeSidObject = tuple[str, str, Any]
 ModeSidObjectNull = ("", "", 0)
 
 IS_WINDOWS = platform.system() == "Windows"
+
 try:
-    import ntsecuritycon  # type: ignore[import-untyped]  # noqa: F401
-    import win32security  # type: ignore[import-untyped]  # noqa: F401
-    from pywintypes import error as pywinerror  # type: ignore[import-untyped]
+    from win32typing import (  # type: ignore[import-untyped]
+        PyACL,
+        PySECURITY_DESCRIPTOR,
+        PySID,
+    )
+except ImportError:
+    if TYPE_CHECKING:
+        raise
+
+    class PySID:  # type: ignore
+        pass
+
+    class PyACL:  # type: ignore
+        pass
+
+    class PySECURITY_DESCRIPTOR:  # type: ignore
+        """Placeholder class on import error"""
+
+        def SetSecurityDescriptorDacl(self, *args: Any, **kwargs: Any) -> None:
+            pass
+
+        def GetSecurityDescriptorGroup(self) -> PySID:
+            return PySID()
+
+
+try:
+    from pywintypes import error  # type: ignore[import-untyped]
+except ImportError:
+    if TYPE_CHECKING:
+        raise
+
+try:
+    import win32security
+except ImportError:
+    if TYPE_CHECKING:
+        raise
+    win32security = object()
+
+try:
+    from ntsecuritycon import (
+        DELETE,
+        FILE_ADD_FILE,
+        FILE_ADD_SUBDIRECTORY,
+        FILE_DELETE_CHILD,
+        FILE_GENERIC_EXECUTE,
+        FILE_GENERIC_READ,
+        FILE_GENERIC_WRITE,
+        FILE_LIST_DIRECTORY,
+        FILE_READ_ATTRIBUTES,
+        FILE_READ_EA,
+        FILE_TRAVERSE,
+        FILE_WRITE_ATTRIBUTES,
+        FILE_WRITE_EA,
+        GENERIC_ALL,
+        GENERIC_EXECUTE,
+        GENERIC_READ,
+        GENERIC_WRITE,
+        INHERIT_ONLY_ACE,
+        OBJECT_INHERIT_ACE,
+        READ_CONTROL,
+        SYNCHRONIZE,
+        WRITE_DAC,
+        WRITE_OWNER,
+    )
+    from win32security import (
+        ACCESS_ALLOWED_ACE_TYPE,
+        ACCESS_DENIED_ACE_TYPE,
+        DACL_SECURITY_INFORMATION,
+        GROUP_SECURITY_INFORMATION,
+        NO_INHERITANCE,
+        OWNER_SECURITY_INFORMATION,
+        SE_FILE_OBJECT,
+        ConvertStringSidToSid,  # type: ignore[misc]
+        GetFileSecurity,  # type: ignore[misc]
+        GetNamedSecurityInfo,  # type: ignore[misc]
+        LookupAccountSid,  # type: ignore[misc]
+        SetFileSecurity,  # type: ignore[misc]
+    )
 
     HAS_PYWIN32 = True
 except ImportError:
     HAS_PYWIN32 = False
-    ntsecuritycon = None
-    win32security = None
 
-    class pywinerror(Exception):  # type: ignore[no-redef]
+    GROUP_SECURITY_INFORMATION = 0
+    DELETE = 0
+    FILE_ADD_FILE = 0
+    FILE_ADD_SUBDIRECTORY = 0
+    FILE_DELETE_CHILD = 0
+    FILE_GENERIC_EXECUTE = 0
+    FILE_GENERIC_READ = 0
+    FILE_GENERIC_WRITE = 0
+    FILE_LIST_DIRECTORY = 0
+    FILE_READ_ATTRIBUTES = 0
+    FILE_READ_EA = 0
+    FILE_TRAVERSE = 0
+    FILE_WRITE_ATTRIBUTES = 0
+    FILE_WRITE_EA = 0
+    GENERIC_ALL = 0
+    GENERIC_EXECUTE = 0
+    GENERIC_READ = 0
+    GENERIC_WRITE = 0
+    INHERIT_ONLY_ACE = 0
+    OBJECT_INHERIT_ACE = 0
+    READ_CONTROL = 0
+    SYNCHRONIZE = 0
+    WRITE_DAC = 0
+    WRITE_OWNER = 0
+
+    ACCESS_ALLOWED_ACE_TYPE = 0
+    ACCESS_DENIED_ACE_TYPE = 0
+    DACL_SECURITY_INFORMATION = 0
+    NO_INHERITANCE = 0
+    OWNER_SECURITY_INFORMATION = 0
+    SE_FILE_OBJECT = 0
+
+    def ConvertStringSidToSid(StringSid: str) -> PySID:
+        return PySID()
+
+    def GetFileSecurity(filename: str, info: Any) -> PySECURITY_DESCRIPTOR:
+        return PySECURITY_DESCRIPTOR()
+
+    def GetNamedSecurityInfo(
+        ObjectName: Any, ObjectType: Any, SecurityInfo: Any
+    ) -> PySECURITY_DESCRIPTOR:
+        return PySECURITY_DESCRIPTOR()
+
+    def LookupAccountSid(systemName: str, sid: PySID) -> tuple[str, str, Any]:
+        return "", "", 0
+
+    def SetFileSecurity(
+        filename: str, info: Any, security: PySECURITY_DESCRIPTOR
+    ) -> None:
+        pass
+
+    class error(Exception):  # type: ignore[no-redef]
         """Placeholder error on import error"""
 
 
@@ -282,50 +396,81 @@ except ImportError:
 if IS_WINDOWS and not HAS_PYWIN32:
     raise ImportError("win32security and ntsecuritycon required on Windows")
 
-if HAS_PYWIN32 and ntsecuritycon is not None:
-    W_FLDIR = ntsecuritycon.FILE_LIST_DIRECTORY  # =                        1
-    W_FADFL = ntsecuritycon.FILE_ADD_FILE  # =                       10
-    W_FADSD = ntsecuritycon.FILE_ADD_SUBDIRECTORY  # =                      100
-    W_FRDEA = ntsecuritycon.FILE_READ_EA  # =                     1000
-    W_FWREA = ntsecuritycon.FILE_WRITE_EA  # =                    10000
-    W_FTRAV = ntsecuritycon.FILE_TRAVERSE  # =                   100000
-    W_FDLCH = ntsecuritycon.FILE_DELETE_CHILD  # =                  1000000
-    W_FRDAT = ntsecuritycon.FILE_READ_ATTRIBUTES  # =                 10000000
-    W_FWRAT = ntsecuritycon.FILE_WRITE_ATTRIBUTES  # =                100000000
-    W_DELET = ntsecuritycon.DELETE  # =        10000000000000000
-    W_RDCON = ntsecuritycon.READ_CONTROL  # =       100000000000000000
-    W_WRDAC = ntsecuritycon.WRITE_DAC  # =      1000000000000000000
-    W_WROWN = ntsecuritycon.WRITE_OWNER  # =     10000000000000000000
-    W_SYNCH = ntsecuritycon.SYNCHRONIZE  # =    100000000000000000000
-    W_FGNEX = ntsecuritycon.FILE_GENERIC_EXECUTE  # =    100100000000010100000
-    W_FGNRD = ntsecuritycon.FILE_GENERIC_READ  # =    100100000000010001001
-    W_FGNWR = ntsecuritycon.FILE_GENERIC_WRITE  # =    100100000000100010110
-    W_GENAL = ntsecuritycon.GENERIC_ALL  # 10000000000000000000000000000
-    W_GENEX = ntsecuritycon.GENERIC_EXECUTE  # 100000000000000000000000000000
-    W_GENWR = ntsecuritycon.GENERIC_WRITE  # 1000000000000000000000000000000
-    W_GENRD = ntsecuritycon.GENERIC_READ  # -10000000000000000000000000000000
-else:
-    W_FLDIR = 0
-    W_FADFL = 0
-    W_FADSD = 0
-    W_FRDEA = 0
-    W_FWREA = 0
-    W_FTRAV = 0
-    W_FDLCH = 0
-    W_FRDAT = 0
-    W_FWRAT = 0
-    W_DELET = 0
-    W_RDCON = 0
-    W_WRDAC = 0
-    W_WROWN = 0
-    W_SYNCH = 0
-    W_FGNEX = 0
-    W_FGNRD = 0
-    W_FGNWR = 0
-    W_GENAL = 0
-    W_GENEX = 0
-    W_GENWR = 0
-    W_GENRD = 0
+__version__ = "0.3.12"
+
+
+class ModeObjectType(IntEnum):
+    FILE = auto()
+    DIRECTORY = auto()
+
+
+OBJECT_TYPES = [ModeObjectType.FILE, ModeObjectType.DIRECTORY]
+
+
+class ModeUserType(IntEnum):
+    OWNER = auto()
+    GROUP = auto()
+    OTHER = auto()
+
+
+OWNER = ModeUserType.OWNER
+GROUP = ModeUserType.GROUP
+OTHER = ModeUserType.OTHER
+
+
+class ModeOperationType(IntEnum):
+    READ = auto()
+    WRITE = auto()
+    EXECUTE = auto()
+
+
+READ = ModeOperationType.READ
+WRITE = ModeOperationType.WRITE
+EXECUTE = ModeOperationType.EXECUTE
+
+OPER_TYPES = [READ, WRITE, EXECUTE]
+
+STAT_MODES: dict[ModeUserType, dict[ModeOperationType, ModeValue]] = {
+    OWNER: {READ: stat.S_IRUSR, WRITE: stat.S_IWUSR, EXECUTE: stat.S_IXUSR},
+    GROUP: {READ: stat.S_IRGRP, WRITE: stat.S_IWGRP, EXECUTE: stat.S_IXGRP},
+    OTHER: {READ: stat.S_IROTH, WRITE: stat.S_IWOTH, EXECUTE: stat.S_IXOTH},
+}
+
+STAT_KEYS = (
+    "S_IRUSR",
+    "S_IWUSR",
+    "S_IXUSR",
+    "S_IRGRP",
+    "S_IWGRP",
+    "S_IXGRP",
+    "S_IROTH",
+    "S_IWOTH",
+    "S_IXOTH",
+)
+
+# fmt: off
+W_FLDIR = FILE_LIST_DIRECTORY         # =                                 1
+W_FADFL = FILE_ADD_FILE               # =                                10
+W_FADSD = FILE_ADD_SUBDIRECTORY       # =                               100
+W_FRDEA = FILE_READ_EA                # =                              1000
+W_FWREA = FILE_WRITE_EA               # =                             10000
+W_FTRAV = FILE_TRAVERSE               # =                            100000
+W_FDLCH = FILE_DELETE_CHILD           # =                           1000000
+W_FRDAT = FILE_READ_ATTRIBUTES        # =                          10000000
+W_FWRAT = FILE_WRITE_ATTRIBUTES       # =                         100000000
+W_DELET = DELETE                      # =                 10000000000000000
+W_RDCON = READ_CONTROL                # =                100000000000000000
+W_WRDAC = WRITE_DAC                   # =               1000000000000000000
+W_WROWN = WRITE_OWNER                 # =              10000000000000000000
+W_SYNCH = SYNCHRONIZE                 # =             100000000000000000000
+W_FGNEX = FILE_GENERIC_EXECUTE        # =             100100000000010100000
+W_FGNRD = FILE_GENERIC_READ           # =             100100000000010001001
+W_FGNWR = FILE_GENERIC_WRITE          # =             100100000000100010110
+W_GENAL = GENERIC_ALL                 # =     10000000000000000000000000000
+W_GENEX = GENERIC_EXECUTE             # =    100000000000000000000000000000
+W_GENWR = GENERIC_WRITE               # =   1000000000000000000000000000000
+W_GENRD = GENERIC_READ                # = -10000000000000000000000000000000
+# fmt: on
 
 W_DIRRD = W_FLDIR | W_FRDEA | W_FRDAT | W_RDCON | W_SYNCH
 W_DIRWR = (
@@ -346,7 +491,18 @@ W_FILRD = W_FGNRD
 W_FILWR = W_FDLCH | W_DELET | W_WRDAC | W_WROWN | W_FGNWR
 W_FILEX = W_FGNEX
 
-WIN_RWX_PERMS = [[W_FILRD, W_FILWR, W_FILEX], [W_DIRRD, W_DIRWR, W_DIREX]]
+WIN_RWX_PERMS: dict[ModeObjectType, dict[ModeOperationType, ModeValue]] = {
+    ModeObjectType.FILE: {
+        ModeOperationType.READ: W_FILRD,
+        ModeOperationType.WRITE: W_FILWR,
+        ModeOperationType.EXECUTE: W_FILEX,
+    },
+    ModeObjectType.DIRECTORY: {
+        ModeOperationType.READ: W_DIRRD,
+        ModeOperationType.WRITE: W_DIRWR,
+        ModeOperationType.EXECUTE: W_DIREX,
+    },
+}
 
 WIN_FILE_PERMISSIONS = (
     "DELETE",
@@ -407,66 +563,6 @@ WIN_INHERITANCE_TYPES = (
 )
 
 SECURITY_NT_AUTHORITY = ("SYSTEM", "NT AUTHORITY", 5)
-
-
-class ModeObjectType(int, Enum):
-    FILE = auto()
-    DIRECTORY = auto()
-
-
-OBJECT_TYPES = [ModeObjectType.FILE, ModeObjectType.DIRECTORY]
-
-
-class ModeOwnerType(int, Enum):
-    OWNER = auto()
-    GROUP = auto()
-    OTHER = auto()
-
-
-OWNER = ModeOwnerType.OWNER
-GROUP = ModeOwnerType.GROUP
-OTHER = ModeOwnerType.OTHER
-
-OWNER_TYPES = [OWNER, GROUP, OTHER]
-
-
-class ModeOperationType(int, Enum):
-    READ = auto()
-    WRITE = auto()
-    EXECUTE = auto()
-
-
-READ = ModeOperationType.READ
-WRITE = ModeOperationType.WRITE
-EXECUTE = ModeOperationType.EXECUTE
-
-OPER_TYPES = [READ, WRITE, EXECUTE]
-
-STAT_MODES = [
-    [stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR],
-    [stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP],
-    [stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH],
-]
-
-STAT_MODES_MAPPING = {
-    OWNER: {READ: stat.S_IRUSR, WRITE: stat.S_IWUSR, EXECUTE: stat.S_IXUSR},
-    GROUP: {READ: stat.S_IRGRP, WRITE: stat.S_IWGRP, EXECUTE: stat.S_IXGRP},
-    OTHER: {READ: stat.S_IROTH, WRITE: stat.S_IWOTH, EXECUTE: stat.S_IXOTH},
-}
-
-STAT_KEYS = (
-    "S_IRUSR",
-    "S_IWUSR",
-    "S_IXUSR",
-    "S_IRGRP",
-    "S_IWGRP",
-    "S_IXGRP",
-    "S_IROTH",
-    "S_IWOTH",
-    "S_IXOTH",
-)
-
-__version__ = "0.3.12"
 
 
 def get_mode(path: ModePath):
@@ -597,36 +693,32 @@ def get_object_type(path: ModePath) -> ModeObjectType:
 
 def get_owner(path: ModePath) -> ModeSidObject:
     """Get the object owner."""
-    if IS_WINDOWS and win32security is not None:
-        return win32security.LookupAccountSid(str(), win_get_owner_sid(path))
+    if IS_WINDOWS:
+        return LookupAccountSid(str(), win_get_owner_sid(path))
     return pwd.getpwuid(os.stat(path).st_uid).pw_name
 
 
 def get_group(path: ModePath) -> ModeSidObject:
     """Get the object group."""
-    if IS_WINDOWS and win32security is not None:
-        return win32security.LookupAccountSid(str(), win_get_group_sid(path))
+    if IS_WINDOWS:
+        return LookupAccountSid(str(), win_get_group_sid(path))
     return grp.getgrgid(os.stat(path).st_gid).gr_name  # type: ignore[attr-defined]
 
 
-def win_get_owner_sid(path: ModePath) -> PySECURITY_DESCRIPTOR:
+def win_get_owner_sid(path: ModePath) -> PySID:
     """Get the file owner."""
-    if win32security is None:
-        return PySECURITY_DESCRIPTOR()
-    sec_descriptor: PySECURITY_DESCRIPTOR = win32security.GetNamedSecurityInfo(
+    sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(
         str(path),
-        win32security.SE_FILE_OBJECT,
-        win32security.OWNER_SECURITY_INFORMATION,
+        SE_FILE_OBJECT,
+        OWNER_SECURITY_INFORMATION,
     )
     return sec_descriptor.GetSecurityDescriptorOwner()
 
 
-def win_get_group_sid(path: ModePath) -> PySECURITY_DESCRIPTOR:
+def win_get_group_sid(path: ModePath) -> PySID:
     """Get the file group."""
-    if win32security is None:
-        return PySECURITY_DESCRIPTOR()
-    sec_descriptor: PySECURITY_DESCRIPTOR = win32security.GetNamedSecurityInfo(
-        path, win32security.SE_FILE_OBJECT, win32security.GROUP_SECURITY_INFORMATION
+    sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(
+        path, SE_FILE_OBJECT, GROUP_SECURITY_INFORMATION
     )
     return sec_descriptor.GetSecurityDescriptorGroup()
 
@@ -637,12 +729,12 @@ def win_get_other_sid() -> PySID:
     For now this is the Users builtin account. In the future, probably should
     allow account to be passed in and find any non-owner, non-group account
     currently associated with the file. As a default, it could use Users."""
-    if win32security is None:
-        return PySID()
-    return win32security.ConvertStringSidToSid("S-1-5-32-545")
+    return ConvertStringSidToSid("S-1-5-32-545")
 
 
-def convert_win_to_stat(win_perm, user_type, object_type):
+def convert_win_to_stat(
+    win_perm: ModeValue, user_type: ModeUserType, object_type: ModeObjectType
+) -> ModeValue:
     """Given Win perm and user type, give stat mode."""
     mode = 0
 
@@ -657,7 +749,7 @@ def convert_win_to_stat(win_perm, user_type, object_type):
 
 
 def convert_stat_to_win(
-    mode: ModeValue, user_type: ModeOwnerType, object_type: ModeObjectType
+    mode: ModeValue, user_type: ModeUserType, object_type: ModeObjectType
 ) -> ModeValue:
     """Given stat mode, return Win bitwise permissions for user type."""
     win_perm = 0
@@ -669,7 +761,7 @@ def convert_stat_to_win(
     return win_perm
 
 
-def win_get_user_type(sid: int, sids: dict[ModeOwnerType, int]) -> ModeOwnerType:
+def win_get_user_type(sid: PySID, sids: dict[ModeUserType, PySID]) -> ModeUserType:
     """Given object and SIDs, return user type."""
     if sid == sids[OWNER]:
         return OWNER
@@ -682,9 +774,13 @@ def win_get_user_type(sid: int, sids: dict[ModeOwnerType, int]) -> ModeOwnerType
 
 def win_get_object_sids(
     path: ModePath,
-) -> tuple[PySECURITY_DESCRIPTOR, PySECURITY_DESCRIPTOR, PySID]:
+) -> dict[ModeUserType, PySID]:
     """Get the owner, group, other SIDs for an object."""
-    return win_get_owner_sid(path), win_get_group_sid(path), win_get_other_sid()
+    return {
+        OWNER: win_get_owner_sid(path),
+        GROUP: win_get_group_sid(path),
+        OTHER: win_get_other_sid(),
+    }
 
 
 def win_get_permissions(path: ModePath) -> ModeValue:
@@ -706,9 +802,7 @@ def _get_basic_symbol_to_mode(symbol: str) -> ModeValue:
 
 def _win_get_permissions(path: str, object_type) -> ModeValue:
     """Get the permissions."""
-    sec_des = win32security.GetNamedSecurityInfo(
-        path, win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
-    )
+    sec_des = GetNamedSecurityInfo(path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION)
     dacl = sec_des.GetSecurityDescriptorDacl()
 
     sids = win_get_object_sids(path)
@@ -717,10 +811,10 @@ def _win_get_permissions(path: str, object_type) -> ModeValue:
     for index in range(0, dacl.GetAceCount()):
         ace = dacl.GetAce(index)
         if (
-            ace[0][0] == win32security.ACCESS_ALLOWED_ACE_TYPE
-            and win32security.LookupAccountSid(None, ace[2]) != SECURITY_NT_AUTHORITY
+            ace[0][0] == ACCESS_ALLOWED_ACE_TYPE
+            and LookupAccountSid(str(), ace[2]) != SECURITY_NT_AUTHORITY
         ):
-            # Not handling win32security.ACCESS_DENIED_ACE_TYPE
+            # Not handling ACCESS_DENIED_ACE_TYPE
             mode = mode | convert_win_to_stat(
                 ace[1], win_get_user_type(ace[2], sids), object_type
             )
@@ -744,10 +838,10 @@ def _win_set_permissions(path: str, mode: ModeValue, object_type: ModeObjectType
     # Here we read effective permissions with GetNamedSecurityInfo, i.e.,
     # including inherited permissions. However, we'll set permissions with
     # SetFileSecurity and NO_INHERITANCE, to disable inheritance.
-    sec_des = win32security.GetNamedSecurityInfo(
-        path, win32security.SE_FILE_OBJECT, win32security.DACL_SECURITY_INFORMATION
+    sec_des: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(
+        path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION
     )
-    dacl = sec_des.GetSecurityDescriptorDacl()
+    dacl: PyACL = sec_des.GetSecurityDescriptorDacl()
 
     system_ace = None
     for _ in range(0, dacl.GetAceCount()):
@@ -756,42 +850,39 @@ def _win_set_permissions(path: str, mode: ModeValue, object_type: ModeObjectType
             if (
                 ace[2]
                 and ace[2].IsValid()
-                and win32security.LookupAccountSid(str(), ace[2])
-                == SECURITY_NT_AUTHORITY
+                and LookupAccountSid(str(), ace[2]) == SECURITY_NT_AUTHORITY
             ):
                 system_ace = ace
-        except pywinerror:
+        except error:
             print("Found orphaned SID:", ace[2])
         dacl.DeleteAce(0)
 
     if system_ace:
         dacl.AddAccessAllowedAceEx(
             dacl.GetAclRevision(),
-            win32security.NO_INHERITANCE,
+            NO_INHERITANCE,
             system_ace[1],
             system_ace[2],
         )
 
     sids = win_get_object_sids(path)
 
-    for user_type, sid in enumerate(sids):
+    for user_type, sid in sids.items():
         win_perm = convert_stat_to_win(mode, user_type, object_type)
 
         if win_perm > 0:
             dacl.AddAccessAllowedAceEx(
-                dacl.GetAclRevision(), win32security.NO_INHERITANCE, win_perm, sid
+                dacl.GetAclRevision(), NO_INHERITANCE, win_perm, sid
             )
 
     sec_des.SetSecurityDescriptorDacl(1, dacl, 0)
-    win32security.SetFileSecurity(
-        path, win32security.DACL_SECURITY_INFORMATION, sec_des
-    )
+    SetFileSecurity(path, DACL_SECURITY_INFORMATION, sec_des)
 
 
 def print_win_inheritance(flags):
     """Display inheritance flags."""
     print("  -Flags:", hex(flags))
-    if flags == win32security.NO_INHERITANCE:
+    if flags == NO_INHERITANCE:
         print("    ", "NO_INHERITANCE")
     else:
         for i in WIN_INHERITANCE_TYPES:
@@ -826,8 +917,8 @@ def print_win_permissions(win_perm, flags, object_type):
         permissions = WIN_DIR_PERMISSIONS
         # directories have ACE that is inherited by children within them
         if (
-            flags & ntsecuritycon.OBJECT_INHERIT_ACE == ntsecuritycon.OBJECT_INHERIT_ACE
-            and flags & ntsecuritycon.INHERIT_ONLY_ACE == ntsecuritycon.INHERIT_ONLY_ACE
+            flags & OBJECT_INHERIT_ACE == OBJECT_INHERIT_ACE
+            and flags & INHERIT_ONLY_ACE == INHERIT_ONLY_ACE
         ):
             permissions = WIN_DIR_INHERIT_PERMISSIONS
 
@@ -865,9 +956,7 @@ def print_obj_info(path: ModePath):
 def _print_win_obj_info(path):
     """Print windows object security info."""
     # get ACEs
-    sec_descriptor = win32security.GetFileSecurity(
-        path, win32security.DACL_SECURITY_INFORMATION
-    )
+    sec_descriptor = GetFileSecurity(path, DACL_SECURITY_INFORMATION)
     dacl = sec_descriptor.GetSecurityDescriptorDacl()
     if dacl is None:
         print("No Discretionary ACL")
@@ -877,7 +966,7 @@ def _print_win_obj_info(path):
         ace = dacl.GetAce(ace_no)
         print("ACE", ace_no)
 
-        print("  -SID:", win32security.LookupAccountSid(None, ace[2]))
+        print("  -SID:", LookupAccountSid(str(), ace[2]))
 
         print_win_ace_type(ace[0][0])
         print_win_inheritance(ace[0][1])
