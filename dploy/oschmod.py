@@ -286,6 +286,13 @@ except ImportError:
     win32security = object()
 
 try:
+    import ntsecuritycon
+except ImportError:
+    if TYPE_CHECKING:
+        raise
+    ntsecuritycon = object()
+
+try:
     from ntsecuritycon import (
         DELETE,
         FILE_ADD_FILE,
@@ -362,21 +369,21 @@ except ImportError:
     OWNER_SECURITY_INFORMATION = 0
     SE_FILE_OBJECT = 0
 
-    def ConvertStringSidToSid(StringSid: str) -> PySID:
+    def ConvertStringSidToSid(StringSid: str) -> PySID:  # type: ignore[misc]
         return PySID()
 
-    def GetFileSecurity(filename: str, info: Any) -> PySECURITY_DESCRIPTOR:
+    def GetFileSecurity(filename: str, info: Any) -> PySECURITY_DESCRIPTOR:  # type: ignore[misc]
         return PySECURITY_DESCRIPTOR()
 
-    def GetNamedSecurityInfo(
+    def GetNamedSecurityInfo(  # type: ignore[misc]
         ObjectName: Any, ObjectType: Any, SecurityInfo: Any
     ) -> PySECURITY_DESCRIPTOR:
         return PySECURITY_DESCRIPTOR()
 
-    def LookupAccountSid(systemName: str, sid: PySID) -> tuple[str, str, Any]:
+    def LookupAccountSid(systemName: str, sid: PySID) -> tuple[str, str, Any]:  # type: ignore[misc]
         return "", "", 0
 
-    def SetFileSecurity(
+    def SetFileSecurity(  # type: ignore[misc]
         filename: str, info: Any, security: PySECURITY_DESCRIPTOR
     ) -> None:
         pass
@@ -386,12 +393,26 @@ except ImportError:
 
 
 try:
-    import grp  # noqa: F401
-    import pwd  # noqa: F401
+    from grp import getgrgid  # type: ignore  # noqa: F401
+    from pwd import getpwuid  # type: ignore  # noqa: F401
 
     HAS_PWD = True
 except ImportError:
     HAS_PWD = False
+
+    class Pwd:
+        """Placeholder class on import error"""
+
+        pw_name: ModeSidObject = "", "", 0
+        pw_uid: ModeSidObject = "", "", 0
+        gr_name: ModeSidObject = "", "", 0
+
+    def getpwuid(uid: int) -> Pwd:
+        return Pwd()
+
+    def getgrgid(uid: int) -> Pwd:
+        return Pwd()
+
 
 if IS_WINDOWS and not HAS_PYWIN32:
     raise ImportError("win32security and ntsecuritycon required on Windows")
@@ -695,14 +716,14 @@ def get_owner(path: ModePath) -> ModeSidObject:
     """Get the object owner."""
     if IS_WINDOWS:
         return LookupAccountSid(str(), win_get_owner_sid(path))
-    return pwd.getpwuid(os.stat(path).st_uid).pw_name
+    return getpwuid(os.stat(path).st_uid).pw_name
 
 
 def get_group(path: ModePath) -> ModeSidObject:
     """Get the object group."""
     if IS_WINDOWS:
         return LookupAccountSid(str(), win_get_group_sid(path))
-    return grp.getgrgid(os.stat(path).st_gid).gr_name  # type: ignore[attr-defined]
+    return getgrgid(os.stat(path).st_gid).gr_name
 
 
 def win_get_owner_sid(path: ModePath) -> PySID:
@@ -902,7 +923,7 @@ def print_win_ace_type(ace_type):
     """Print ACE type."""
     print("  -Type:")
     for i in WIN_ACE_TYPES:
-        if getattr(ntsecuritycon, i) == ace_type:
+        if ntsecuritycon is not None and getattr(ntsecuritycon, i) == ace_type:
             print("    ", i)
 
 
