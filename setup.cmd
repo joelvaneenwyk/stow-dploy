@@ -12,12 +12,12 @@ goto:$Command
         set "_command=!_command:   = !"
         set "_command=!_command:  = !"
         set _error_value=0
-        if "%MYCOSHIRO_CRITICAL_ERROR%"=="" goto:$RunCommand
-        if "%MYCOSHIRO_CRITICAL_ERROR%"=="0" goto:$RunCommand
+        if "%CRITICAL_ERROR%"=="" goto:$RunCommand
+        if "%CRITICAL_ERROR%"=="0" goto:$RunCommand
 
         :: Hit critical error so skip the command
         echo [ERROR] Critical error detected. Skipped command: !_command!
-        set _error_value=%MYCOSHIRO_CRITICAL_ERROR%
+        set _error_value=%CRITICAL_ERROR%
         goto:$CommandDone
 
         :$RunCommand
@@ -34,7 +34,9 @@ goto:$Command
     setlocal EnableDelayedExpansion
         set "_command=%*"
         call :CommandVar "_command"
-    endlocal & exit /b
+    endlocal & (
+        exit /b %ERRORLEVEL%
+    )
 :$Command
 
 :Sudo
@@ -47,29 +49,40 @@ goto:$Command
 exit /b %ERRORLEVEL%
 
 :TrySudo
+setlocal EnableDelayedExpansion
+    set _return_value=0
     call gsudo status IsElevated --no-output && goto:$TryIsElevated
     echo Skipped 'gsudo' as we are not elevated.
-    exit /b 0
+    goto:$TrySudoDone
 
     :$TryIsElevated
     call :Command gsudo %*
+    set _return_value=%ERRORLEVEL%
     goto:$TrySudoDone
 
     :$TrySudoDone
-exit /b %ERRORLEVEL%
+endlocal & exit /b %_return_value%
+
+:ClearError
+exit /b 0
 
 :Cleanup
+setlocal EnableDelayedExpansion
+    set _return_value=0
     call gsudo status IsElevated --no-output && goto:$CleanupIsElevated
     goto:$CleanupDone
 
     :$CleanupIsElevated
     call :Command gsudo cache off
+    set _return_value=%ERRORLEVEL%
 
     :$CleanupDone
-exit /b %ERRORLEVEL%
+endlocal & exit /b %_return_value%
 
 :$Main
 setlocal EnableExtensions
+    call :ClearError
+
     call :TrySudo py -3 -m pip install --no-warn-script-location --upgrade pip
     if errorlevel 1 goto:$MainError
     call :Command py -3 -m pip install --upgrade --user --no-warn-script-location -r "%~dp0requirements.txt"
@@ -83,19 +96,19 @@ setlocal EnableExtensions
     if errorlevel 1 goto:$MainError
 
     set VIRTUAL_ENV_DISABLE_PROMPT=1
-    call :Command poetry shell
+    call :Command pipx run poetry shell
     if errorlevel 1 goto:$MainError
 
-    call :Command poetry run pip install --no-warn-script-location --upgrade pip setuptools wheel pytest-github-actions-annotate-failures
+    call :Command pipx run poetry run pip install --no-warn-script-location --upgrade pip setuptools wheel pytest-github-actions-annotate-failures
     if errorlevel 1 goto:$MainError
 
-    call :Command poetry install --no-interaction --with dev
+    call :Command pipx run poetry install --no-interaction --with dev
     if errorlevel 1 goto:$MainError
 
-    call :Command poetry lock
+    call :Command pipx run poetry lock
     if errorlevel 1 goto:$MainError
 
-    call :Command poetry run ruff .
+    call :Command pipx run poetry run ruff .
     if errorlevel 1 goto:$MainError
 
     call :Command docker pull "ghcr.io/catthehacker/ubuntu:full-latest"
