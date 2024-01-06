@@ -17,3 +17,5 @@ wheel
 lexicon
 invoke>=2.2.0
 fs>=2.0.0
+win32security; sys_platform == 'win32'
+pypiwin32; sys_platform == 'win32'

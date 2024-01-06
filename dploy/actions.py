@@ -4,7 +4,8 @@ commands
 """
 
 from collections import defaultdict
-from dploy import utils
+
+from dploy import error, utils
 
 
 class Actions:
@@ -99,7 +100,10 @@ class SymbolicLink(AbstractBaseAction):
         self.dest = dest
 
     def execute(self):
-        self.dest.symlink_to(self.source_relative)
+        try:
+            self.dest.symlink_to(self.source_relative)
+        except PermissionError:
+            raise error.InsufficientPermissionsToSubcmdTo(self.subcmd, self.dest)
 
     def __repr__(self):
         return "dploy {subcmd}: link {dest} => {source}".format(

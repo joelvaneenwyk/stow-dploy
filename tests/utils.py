@@ -4,51 +4,47 @@ Contains utilities used during testing
 
 import os
 import shutil
-import stat
 from pathlib import Path
 
-import fs
-import fs.osfs
-
-from dploy.utils import StowPath, StowTree
+from dploy.oschmod import set_mode
+from dploy.utils import (
+    Operation,
+    Permission,
+    Permission_Execute,
+    Permission_Read,
+    Permission_Write,
+    StowPath,
+    StowTree,
+    update_permissions,
+)
 
 
 def remove_tree(tree: StowPath):
-    """
-    reset the permission of a file and directory tree and remove it
-    """
-    os.chmod(tree, 0o777)
+    """reset the permission of a file and directory tree and remove it"""
+    set_mode(tree, 0o777)
     shutil.rmtree(tree)
 
 
 def remove_file(file_name: StowPath):
-    """
-    reset the permission of a file and remove it
-    """
-    os.chmod(file_name, 0o777)
+    """reset the permission of a file and remove it"""
+    set_mode(file_name, 0o777)
     os.remove(file_name)
 
 
 def create_file(file_name: StowPath) -> str:
-    """
-    create an file
-    """
+    """create an file"""
     open(file_name, "w", encoding="utf8").close()
     return str(file_name)
 
 
 def create_directory(directory_name: StowPath):
-    """
-    create an directory
-    """
+    """create an directory"""
     os.makedirs(directory_name)
 
 
 class ChangeDirectory:
     # pylint: disable=too-few-public-methods
-    """
-    Context manager for changing the current working directory
-    """
+    """Context manager for changing the current working directory"""
 
     def __init__(self, new_path: StowPath):
         self.new_path = os.path.expanduser(new_path)
@@ -81,40 +77,29 @@ def create_tree(tree: StowTree) -> None:
         pass
 
 
-def remove_read_permission(path: StowPath):
-    """
-    change users permissions to a path to write only
-    """
-    input_path_item = Path(path)
-    os_file_system = fs.osfs.OSFS(input_path_item.root)
-    os_path_info = os_file_system.getinfo(str(input_path_item))
-    if os_path_info.permissions:
-        os_path_info.permissions.remove("u_r", "g_r", "o_r")
-        os_file_system.setinfo(str(input_path_item), os_path_info.raw)
+def remove_read_permission(path: StowPath) -> None:
+    """change users permissions to a path to write only"""
+    update_permissions(path, Operation.remove, *Permission_Read)
 
 
-def add_read_permission(path: StowPath):
-    """
-    change users permissions to a path to write only
-    """
-    mode = os.stat(path)[stat.ST_MODE]
-    os.chmod(path, mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+def remove_write_permission(path: StowPath) -> None:
+    """Change users permissions to a path to read only"""
+    update_permissions(path, Operation.remove, *Permission_Write)
 
 
-def remove_write_permission(path: StowPath):
-    """
-    change users permissions to a path to read only
-    """
-    mode = os.stat(path)[stat.ST_MODE]
-    os.chmod(path, mode & ~stat.S_IWUSR & ~stat.S_IWGRP & ~stat.S_IWOTH)
+def remove_execute_permission(path: StowPath) -> None:
+    """Change users permissions to a path to read only."""
+    update_permissions(path, Operation.remove, *Permission_Execute)
 
 
-def remove_execute_permission(path: StowPath):
-    """
-    change users permissions to a path to read only
-    """
-    mode = os.stat(path)[stat.ST_MODE]
-    os.chmod(path, mode & ~stat.S_IXUSR & ~stat.S_IXGRP & ~stat.S_IXOTH)
+def add_read_permission(path: StowPath) -> None:
+    """Change users permissions to a path to write only"""
+    update_permissions(path, Operation.add, *Permission_Read)
+
+
+def add_execute_permission(path: StowPath) -> None:
+    """Change users permissions to a path to read only"""
+    update_permissions(path, Operation.add, *Permission_Execute)
 
 
 def restore_tree_permissions(top_directory: StowPath) -> None:
@@ -135,10 +120,6 @@ def add_user_permissions(path: StowPath) -> None:
     if not os.path.exists(path) and not os.path.islink(path):
         raise FileNotFoundError(f"Invalid file or directory: {path}")
 
-    wanted = stat.S_IREAD | stat.S_IWRITE
+    update_permissions(path, Operation.add, *[Permission.u_r, Permission.u_w])
     if os.path.isdir(path):
-        wanted |= stat.S_IEXEC
-
-    mode = stat.S_IMODE(os.lstat(path).st_mode)
-    if mode & wanted != wanted and not os.path.islink(path):
-        os.chmod(path, mode | wanted)
+        update_permissions(path, Operation.add, *[Permission.u_x])

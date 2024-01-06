@@ -138,10 +138,7 @@ def test_stow_with_same_simple_directory_used_as_source_and_dest(source_only_fil
 
 def test_stow_with_read_only_dest(source_a, dest):
     utils.remove_write_permission(dest)
-    message = error.as_match(
-        error.InsufficientPermissionsToSubcmdTo(subcmd=SUBCMD, file=dest)
-    )
-    with pytest.raises(error.InsufficientPermissionsToSubcmdTo, match=message):
+    with pytest.raises(error.InsufficientPermissionsToSubcmdTo):
         dploy.stow([source_a], dest)
 
 

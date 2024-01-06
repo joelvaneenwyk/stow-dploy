@@ -33,8 +33,15 @@ dploy = "dploy.__main__:main"
 [tool.poetry.dependencies]
 python = ">=3.8.1"
 importlib-metadata = ">=1.0.0"
-ruff = ">=0.1.0"
 fs = "^2.0.0"
+
+[tool.poetry.dependencies.win32security]
+platform = "win32"
+version = "^2.1.0"
+
+[tool.poetry.dependencies.pypiwin32]
+platform = "win32"
+version = "^223"
 
 [tool.poetry.dev-dependencies]
 pytest = ">=4.6"
@@ -43,6 +50,7 @@ pylint = "^3.0"
 radon = ">=2.0.3"
 invoke = "^2.0"
 black = "^21.9b0"
+ruff = ">=0.1.0"
 
 [tool.pylint]
 max-line-length = 120

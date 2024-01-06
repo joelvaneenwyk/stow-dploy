@@ -2,10 +2,7 @@
 The logic and workings behind the link sub-commands
 """
 
-from dploy import actions
-from dploy import utils
-from dploy import error
-from dploy import main
+from dploy import actions, error, main, utils
 
 
 # pylint: disable=too-few-public-methods
@@ -62,7 +59,7 @@ class LinkInput(main.Input):
         if not utils.is_file_writable(dest.parent) or not utils.is_directory_writable(
             dest.parent
         ):
-            self.errors.add(error.InsufficientPermissionsToSubcmdTo(self.subcmd, dest))
+            self.errors.add(error.InsufficientPermissions(self.subcmd, dest))
             return False
 
         return True

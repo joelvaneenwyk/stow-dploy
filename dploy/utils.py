@@ -6,8 +6,17 @@ missing from the pathlib module.
 import os
 import pathlib
 import shutil
+import stat
+from enum import Enum, auto
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Union
+
+import fs
+import fs.osfs
+import fs.permissions
+from fs.errors import MissingInfoNamespace
+
+from dploy.oschmod import get_mode, set_mode
 
 StowPath = Union[os.PathLike[str], str, Path]
 StowTreeIterable = Union[Dict[str, "StowTreeNode"], List["StowTreeNode"]]
@@ -15,6 +24,63 @@ StowTreeNode = Union[StowTreeIterable, StowPath]
 StowTree = StowTreeNode
 StowSources = Iterable[StowPath]
 StowIgnorePatterns = Optional[Iterable[str]]
+
+
+def _get_fs(path: StowPath) -> tuple[fs.osfs.OSFS, str]:
+    """
+    get a filesystem object from a path
+    """
+    try:
+        input_path_item = Path(path).resolve(strict=True)
+        root = fs.path.normpath(input_path_item.anchor)
+        rel = fs.path.normpath(str(input_path_item))
+        fs_mount = fs.osfs.OSFS(root, create=True, create_mode=0o777, expand_vars=True)
+        fs_path = fs.path.normpath(rel.replace(root, "")).replace("\\", "/")
+    except IOError:
+        raise FileNotFoundError(f"Invalid file or directory: {path}")
+    return fs_mount, fs_path
+
+
+class Permission(int, Enum):
+    u_r = stat.S_IRUSR
+    u_w = stat.S_IWUSR
+    u_x = stat.S_IXUSR
+    g_r = stat.S_IRGRP
+    g_w = stat.S_IWGRP
+    g_x = stat.S_IXGRP
+    o_r = stat.S_IROTH
+    o_w = stat.S_IWOTH
+    o_x = stat.S_IXOTH
+
+
+class Operation(Enum):
+    add = auto()
+    remove = auto()
+
+
+Permissions = Iterable[Permission]
+Permission_Read = [Permission.u_r, Permission.g_r, Permission.o_r]
+Permission_Write = [Permission.u_w, Permission.g_w, Permission.o_w]
+Permission_Execute = [Permission.u_x, Permission.g_x, Permission.o_x]
+
+
+def update_permissions(
+    path: StowPath, operation: Operation, *permissions: Permission
+) -> None:
+    """Add or remove permission(s) from a file or directory."""
+    try:
+        os_file_system, input_path_item = _get_fs(path)
+        mode = get_mode(os_file_system.getsyspath(input_path_item))
+        for p in permissions:
+            if operation == Operation.add:
+                mode |= p
+            else:
+                mode &= ~p
+        set_mode(os_file_system.getsyspath(input_path_item), mode)
+    except MissingInfoNamespace:
+        pass
+    except FileNotFoundError:
+        pass
 
 
 def get_directory_contents(directory: Path) -> list[Path]:
@@ -79,39 +145,45 @@ def get_relative_path(path: StowPath, start_at: StowPath) -> Path:
     return pathlib.Path(relative_path)
 
 
+def _get_access(path_item: StowPath) -> fs.permissions.Permissions:
+    os_file_system, input_path_item = _get_fs(path_item)
+    access = os_file_system.getinfo(input_path_item, namespaces=["access"])
+    if access.permissions is None:
+        raise FileNotFoundError(f"Invalid file or directory: {path_item}")
+    return access.permissions
+
+
 def is_file_readable(a_file: StowPath) -> bool:
-    """
-    check if a pathlib.Path() file is readable
-    """
-    return os.access(str(a_file), os.R_OK)
+    """check if a pathlib.Path() file is readable"""
+    return _get_access(a_file).u_r
 
 
 def is_file_writable(a_file: StowPath) -> bool:
     """
     check if a pathlib.Path() file is writable
     """
-    return os.access(str(a_file), os.W_OK)
+    return _get_access(a_file).u_w
 
 
 def is_directory_readable(directory: StowPath) -> bool:
     """
     check if a pathlib.Path() directory is readable
     """
-    return os.access(str(directory), os.R_OK)
+    return _get_access(directory).u_r
 
 
 def is_directory_writable(directory: StowPath) -> bool:
     """
     check if a pathlib.Path() directory is writable
     """
-    return os.access(str(directory), os.W_OK)
+    return _get_access(directory).u_w
 
 
 def is_directory_executable(directory: StowPath) -> bool:
     """
     check if a pathlib.Path() directory is executable
     """
-    return os.access(str(directory), os.X_OK)
+    return _get_access(directory).u_x
 
 
 def readlink(path: StowPath, absolute_target: bool = False) -> Path:
