@@ -238,7 +238,7 @@ import re
 import stat
 import string
 from enum import IntEnum, auto
-from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union
+from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union
 
 ModePath = Union[os.PathLike[str], pathlib.Path, str]
 ModeValue = int
@@ -415,7 +415,12 @@ except ImportError:
     try:
         from _typeshed import structseq  # type: ignore
     except ImportError:
-        structseq: TypeAlias = Any  # type: ignore[no-redef]  # pylint: disable=invalid-name
+        _T_co = TypeVar("_T_co", covariant=True)
+
+        class structseq(Generic[_T_co]):  # type: ignore[no-redef]  # pylint: disable=invalid-name
+            """Placeholder class on import error"""
+
+            pass
 
     class struct_passwd(structseq[Any], tuple[str, str, int, int, str, str, str]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
         """Placeholder class on import error"""
