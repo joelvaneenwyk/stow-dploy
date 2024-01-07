@@ -102,8 +102,10 @@ class SymbolicLink(AbstractBaseAction):
     def execute(self):
         try:
             self.dest.symlink_to(self.source_relative)
-        except PermissionError:
-            raise error.InsufficientPermissionsToSubcmdTo(self.subcmd, self.dest)
+        except PermissionError as permission_error:
+            raise error.InsufficientPermissionsToSubcmdTo(
+                self.subcmd, self.dest
+            ) from permission_error
 
     def __repr__(self):
         return "dploy {subcmd}: link {dest} => {source}".format(

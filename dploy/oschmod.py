@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-lines
 """oschmod module.
 
 Module for working with file permissions that are consistent across Windows,
@@ -242,7 +243,8 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 ModePath = Union[os.PathLike[str], pathlib.Path, str]
 ModeValue = int
 ModeSidObject = tuple[str, str, Any]
-ModeSidObjectNull = ("", "", 0)
+
+PySidDefault = ("", "", 0)
 
 IS_WINDOWS = platform.system() == "Windows"
 
@@ -256,19 +258,25 @@ except ImportError:
     if TYPE_CHECKING:
         raise
 
-    class PySID:  # type: ignore
+    class PySID:  # type: ignore  # pylint: disable=too-few-public-methods
+        """Placeholder class on import error"""
+
         pass
 
-    class PyACL:  # type: ignore
+    class PyACL:  # type: ignore  # pylint: disable=too-few-public-methods
+        """Placeholder class on import error"""
+
         pass
 
-    class PySECURITY_DESCRIPTOR:  # type: ignore
+    class PySECURITY_DESCRIPTOR:  # type: ignore  # pylint: disable=invalid-name
         """Placeholder class on import error"""
 
         def SetSecurityDescriptorDacl(self, *args: Any, **kwargs: Any) -> None:
+            """Placeholder method"""
             pass
 
         def GetSecurityDescriptorGroup(self) -> PySID:
+            """Placeholder method"""
             return PySID()
 
 
@@ -320,7 +328,6 @@ try:
     )
     from win32security import (
         ACCESS_ALLOWED_ACE_TYPE,
-        ACCESS_DENIED_ACE_TYPE,
         DACL_SECURITY_INFORMATION,
         GROUP_SECURITY_INFORMATION,
         NO_INHERITANCE,
@@ -369,26 +376,31 @@ except ImportError:
     OWNER_SECURITY_INFORMATION = 0
     SE_FILE_OBJECT = 0
 
-    def ConvertStringSidToSid(StringSid: str) -> PySID:  # type: ignore[misc]
+    def ConvertStringSidToSid(StringSid: str) -> PySID:  # type: ignore[misc]  # pylint: disable=unused-argument,invalid-name
+        """Placeholder method"""
         return PySID()
 
-    def GetFileSecurity(filename: str, info: Any) -> PySECURITY_DESCRIPTOR:  # type: ignore[misc]
+    def GetFileSecurity(filename: str, info: Any) -> PySECURITY_DESCRIPTOR:  # type: ignore[misc]  # pylint: disable=unused-argument,invalid-name
+        """Placeholder method"""
         return PySECURITY_DESCRIPTOR()
 
-    def GetNamedSecurityInfo(  # type: ignore[misc]
+    def GetNamedSecurityInfo(  # type: ignore[misc]  # pylint: disable=unused-argument,invalid-name
         ObjectName: Any, ObjectType: Any, SecurityInfo: Any
     ) -> PySECURITY_DESCRIPTOR:
+        """Placeholder method"""
         return PySECURITY_DESCRIPTOR()
 
-    def LookupAccountSid(systemName: str, sid: PySID) -> tuple[str, str, Any]:  # type: ignore[misc]
-        return "", "", 0
+    def LookupAccountSid(systemName: str, sid: PySID) -> tuple[str, str, Any]:  # type: ignore[misc]  # pylint: disable=unused-argument,invalid-name
+        """Placeholder method"""
+        return PySidDefault
 
-    def SetFileSecurity(  # type: ignore[misc]
+    def SetFileSecurity(  # type: ignore[misc]  # pylint: disable=unused-argument,invalid-name
         filename: str, info: Any, security: PySECURITY_DESCRIPTOR
     ) -> None:
+        """Placeholder method"""
         pass
 
-    class error(Exception):  # type: ignore[no-redef]
+    class error(Exception):  # type: ignore[no-redef]  # pylint: disable=function-redefined,invalid-name
         """Placeholder error on import error"""
 
 
@@ -400,17 +412,19 @@ try:
 except ImportError:
     HAS_PWD = False
 
-    class Pwd:
+    class Pwd:  # pylint: disable=too-few-public-methods
         """Placeholder class on import error"""
 
-        pw_name: ModeSidObject = "", "", 0
-        pw_uid: ModeSidObject = "", "", 0
-        gr_name: ModeSidObject = "", "", 0
+        pw_name: ModeSidObject = PySidDefault
+        pw_uid: ModeSidObject = PySidDefault
+        gr_name: ModeSidObject = PySidDefault
 
-    def getpwuid(uid: int) -> Pwd:
+    def getpwuid(uid: int) -> Pwd:  # pylint: disable=unused-argument
+        """Placeholder method"""
         return Pwd()
 
-    def getgrgid(uid: int) -> Pwd:
+    def getgrgid(uid: int) -> Pwd:  # pylint: disable=unused-argument
+        """Placeholder method"""
         return Pwd()
 
 
@@ -421,6 +435,8 @@ __version__ = "0.3.12"
 
 
 class ModeObjectType(IntEnum):
+    """Enum for user type."""
+
     FILE = auto()
     DIRECTORY = auto()
 
@@ -429,6 +445,8 @@ OBJECT_TYPES = [ModeObjectType.FILE, ModeObjectType.DIRECTORY]
 
 
 class ModeUserType(IntEnum):
+    """Enum for user type."""
+
     OWNER = auto()
     GROUP = auto()
     OTHER = auto()
@@ -440,6 +458,8 @@ OTHER = ModeUserType.OTHER
 
 
 class ModeOperationType(IntEnum):
+    """Enum for user type."""
+
     READ = auto()
     WRITE = auto()
     EXECUTE = auto()
@@ -741,7 +761,7 @@ def win_get_group_sid(path: ModePath) -> PySID:
     sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(
         path, SE_FILE_OBJECT, GROUP_SECURITY_INFORMATION
     )
-    return sec_descriptor.GetSecurityDescriptorGroup()
+    return sec_descriptor.GetSecurityDescriptorGroup()  # type: ignore
 
 
 def win_get_other_sid() -> PySID:
@@ -896,7 +916,7 @@ def _win_set_permissions(path: str, mode: ModeValue, object_type: ModeObjectType
                 dacl.GetAclRevision(), NO_INHERITANCE, win_perm, sid
             )
 
-    sec_des.SetSecurityDescriptorDacl(1, dacl, 0)
+    sec_des.SetSecurityDescriptorDacl(1, dacl, 0)  # type: ignore
     SetFileSecurity(path, DACL_SECURITY_INFORMATION, sec_des)
 
 
@@ -997,9 +1017,8 @@ def _print_win_obj_info(path):
 def perm_test(mode=stat.S_IRUSR | stat.S_IWUSR):
     """Creates test file and modifies permissions."""
     path = "".join(random.choice(string.ascii_letters) for i in range(10)) + ".txt"
-    file_hdl = open(path, "w+")
-    file_hdl.write("new file")
-    file_hdl.close()
+    with open(path, "w+", encoding="utf-8") as file_hdl:
+        file_hdl.write("new file")
     print("Created test file:", path)
 
     print("BEFORE Permissions:")

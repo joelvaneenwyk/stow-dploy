@@ -36,26 +36,30 @@ def _get_fs(path: StowPath) -> tuple[fs.osfs.OSFS, str]:
         rel = fs.path.normpath(str(input_path_item))
         fs_mount = fs.osfs.OSFS(root, create=True, create_mode=0o777, expand_vars=True)
         fs_path = fs.path.normpath(rel.replace(root, "")).replace("\\", "/")
-    except IOError:
-        raise FileNotFoundError(f"Invalid file or directory: {path}")
+    except IOError as io_error:
+        raise FileNotFoundError(f"Invalid file or directory: {path}") from io_error
     return fs_mount, fs_path
 
 
 class Permission(int, Enum):
-    u_r = stat.S_IRUSR
-    u_w = stat.S_IWUSR
-    u_x = stat.S_IXUSR
-    g_r = stat.S_IRGRP
-    g_w = stat.S_IWGRP
-    g_x = stat.S_IXGRP
-    o_r = stat.S_IROTH
-    o_w = stat.S_IWOTH
-    o_x = stat.S_IXOTH
+    """Permissions mapping for files and directories."""
+
+    u_r = stat.S_IRUSR  # pylint: disable=invalid-name
+    u_w = stat.S_IWUSR  # pylint: disable=invalid-name
+    u_x = stat.S_IXUSR  # pylint: disable=invalid-name
+    g_r = stat.S_IRGRP  # pylint: disable=invalid-name
+    g_w = stat.S_IWGRP  # pylint: disable=invalid-name
+    g_x = stat.S_IXGRP  # pylint: disable=invalid-name
+    o_r = stat.S_IROTH  # pylint: disable=invalid-name
+    o_w = stat.S_IWOTH  # pylint: disable=invalid-name
+    o_x = stat.S_IXOTH  # pylint: disable=invalid-name
 
 
 class Operation(Enum):
-    add = auto()
-    remove = auto()
+    """Operation to perform on a file or directory."""
+
+    ADD = auto()
+    REMOVE = auto()
 
 
 Permissions = Iterable[Permission]
@@ -72,7 +76,7 @@ def update_permissions(
         os_file_system, input_path_item = _get_fs(path)
         mode = get_mode(os_file_system.getsyspath(input_path_item))
         for p in permissions:
-            if operation == Operation.add:
+            if operation == Operation.ADD:
                 mode |= p
             else:
                 mode &= ~p

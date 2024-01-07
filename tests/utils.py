@@ -33,7 +33,8 @@ def remove_file(file_name: StowPath):
 
 def create_file(file_name: StowPath) -> str:
     """create an file"""
-    open(file_name, "w", encoding="utf8").close()
+    with open(file_name, "w", encoding="utf8"):
+        pass
     return str(file_name)
 
 
@@ -62,7 +63,7 @@ def create_tree(tree: StowTree) -> None:
     create an file and directory tree
     """
     try:
-        if isinstance(tree, str) or isinstance(tree, Path):
+        if isinstance(tree, (Path, str)):
             create_file(tree)
         elif isinstance(tree, list):
             for branch in tree:
@@ -79,27 +80,27 @@ def create_tree(tree: StowTree) -> None:
 
 def remove_read_permission(path: StowPath) -> None:
     """change users permissions to a path to write only"""
-    update_permissions(path, Operation.remove, *Permission_Read)
+    update_permissions(path, Operation.REMOVE, *Permission_Read)
 
 
 def remove_write_permission(path: StowPath) -> None:
     """Change users permissions to a path to read only"""
-    update_permissions(path, Operation.remove, *Permission_Write)
+    update_permissions(path, Operation.REMOVE, *Permission_Write)
 
 
 def remove_execute_permission(path: StowPath) -> None:
     """Change users permissions to a path to read only."""
-    update_permissions(path, Operation.remove, *Permission_Execute)
+    update_permissions(path, Operation.REMOVE, *Permission_Execute)
 
 
 def add_read_permission(path: StowPath) -> None:
     """Change users permissions to a path to write only"""
-    update_permissions(path, Operation.add, *Permission_Read)
+    update_permissions(path, Operation.ADD, *Permission_Read)
 
 
 def add_execute_permission(path: StowPath) -> None:
     """Change users permissions to a path to read only"""
-    update_permissions(path, Operation.add, *Permission_Execute)
+    update_permissions(path, Operation.ADD, *Permission_Execute)
 
 
 def restore_tree_permissions(top_directory: StowPath) -> None:
@@ -120,6 +121,6 @@ def add_user_permissions(path: StowPath) -> None:
     if not os.path.exists(path) and not os.path.islink(path):
         raise FileNotFoundError(f"Invalid file or directory: {path}")
 
-    update_permissions(path, Operation.add, *[Permission.u_r, Permission.u_w])
+    update_permissions(path, Operation.ADD, *[Permission.u_r, Permission.u_w])
     if os.path.isdir(path):
-        update_permissions(path, Operation.add, *[Permission.u_x])
+        update_permissions(path, Operation.ADD, *[Permission.u_x])
