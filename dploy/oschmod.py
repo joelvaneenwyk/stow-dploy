@@ -237,7 +237,7 @@ import re
 import stat
 import string
 from enum import IntEnum, auto
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 ModePath = Union[os.PathLike[str], pathlib.Path, str]
 ModeValue = int
@@ -247,7 +247,7 @@ ModeSidObjectNull = ("", "", 0)
 IS_WINDOWS = platform.system() == "Windows"
 
 try:
-    from win32typing import (  # type: ignore[import-untyped]
+    from win32typing import (  # type: ignore[import-untyped,import-not-found]
         PyACL,
         PySECURITY_DESCRIPTOR,
         PySID,
@@ -279,14 +279,14 @@ except ImportError:
         raise
 
 try:
-    import win32security
+    import win32security  # type: ignore[import-untyped]
 except ImportError:
     if TYPE_CHECKING:
         raise
     win32security = object()
 
 try:
-    import ntsecuritycon
+    import ntsecuritycon  # type: ignore[import-untyped]
 except ImportError:
     if TYPE_CHECKING:
         raise
@@ -620,7 +620,7 @@ def set_mode(path: ModePath, mode: ModeValue) -> ModeValue:
 
 
 def set_mode_recursive(
-    path: ModePath, mode: ModeValue, dir_mode: ModeValue | None = None
+    path: ModePath, mode: ModeValue, dir_mode: Optional[ModeValue] = None
 ) -> ModeValue:
     r"""
     Set all file and directory permissions at or under path to modes.

@@ -48,9 +48,9 @@ def test_link_with_read_only_dest(file_a, dest):
     dest_file = os.path.join(dest, "file_a_link")
     utils.remove_write_permission(dest)
     message = error.as_match(
-        error.InsufficientPermissionsToSubcmdTo(subcmd=SUBCMD, file=dest_file)
+        error.InsufficientPermissions(subcmd=SUBCMD, file=dest_file)
     )
-    with pytest.raises(error.InsufficientPermissionsToSubcmdTo, match=message):
+    with pytest.raises(error.InsufficientPermissions, match=message):
         dploy.link(file_a, dest_file)
 
 
