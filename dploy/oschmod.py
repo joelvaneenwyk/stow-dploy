@@ -405,12 +405,26 @@ except ImportError:
 
 
 try:
-    from grp import getgrgid  # type: ignore  # noqa: F401
-    from pwd import getpwuid  # type: ignore  # noqa: F401
+    from grp import getgrgid, struct_group  # type: ignore  # noqa: F401
+    from pwd import getpwuid, struct_passwd  # type: ignore  # noqa: F401
 
     HAS_PWD = True
 except ImportError:
     HAS_PWD = False
+
+    from _typeshed import structseq
+
+    class struct_passwd(structseq[Any], tuple[str, str, int, int, str, str, str]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
+        """Placeholder class on import error"""
+
+        def __init__(self):
+            pass
+
+    class struct_group(structseq[Any], tuple[str, str, int, int, str, str, str]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
+        """Placeholder class on import error"""
+
+        def __init__(self):
+            pass
 
     class Pwd:  # pylint: disable=too-few-public-methods
         """Placeholder class on import error"""
@@ -419,13 +433,13 @@ except ImportError:
         pw_uid: ModeSidObject = PySidDefault
         gr_name: ModeSidObject = PySidDefault
 
-    def getpwuid(uid: int) -> Pwd:  # pylint: disable=unused-argument
+    def getpwuid(__uid: int) -> struct_passwd:  # type: ignore[misc]  # pylint: disable=unused-argument
         """Placeholder method"""
-        return Pwd()
+        return struct_passwd()
 
-    def getgrgid(uid: int) -> Pwd:  # pylint: disable=unused-argument
+    def getgrgid(__uid: int) -> struct_passwd:  # type: ignore[misc]   # pylint: disable=unused-argument
         """Placeholder method"""
-        return Pwd()
+        return struct_group()
 
 
 __version__ = "0.3.12"

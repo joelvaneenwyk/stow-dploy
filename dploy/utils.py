@@ -16,7 +16,7 @@ import fs.osfs
 import fs.permissions
 from fs.errors import MissingInfoNamespace
 
-from dploy.oschmod import get_mode, set_mode
+from dploy.oschmod import IS_WINDOWS, get_mode, set_mode
 
 StowPath = Union[os.PathLike[str], str, Path]
 StowTreeIterable = Union[Dict[str, "StowTreeNode"], List["StowTreeNode"]]
@@ -35,7 +35,10 @@ def _get_fs(path: StowPath) -> tuple[fs.osfs.OSFS, str]:
         root = fs.path.normpath(input_path_item.anchor)
         rel = fs.path.normpath(str(input_path_item))
         fs_mount = fs.osfs.OSFS(root, create=True, create_mode=0o777, expand_vars=True)
-        fs_path = fs.path.normpath(rel.replace(root, "")).replace("\\", "/")
+        if IS_WINDOWS:
+            rel = rel.replace(root, "?", 1)
+            rel = rel.replace("\\", "/")
+        fs_path = fs.path.normpath(rel)
     except IOError as io_error:
         raise FileNotFoundError(f"Invalid file or directory: {path}") from io_error
     return fs_mount, fs_path
@@ -72,13 +75,14 @@ def update_permissions(path: StowPath, operation: Operation, *permissions: Permi
     """Add or remove permission(s) from a file or directory."""
     try:
         os_file_system, input_path_item = _get_fs(path)
-        mode = get_mode(os_file_system.getsyspath(input_path_item))
+        sys_path = os_file_system.getsyspath(input_path_item)
+        mode = get_mode(sys_path)
         for p in permissions:
             if operation == Operation.ADD:
                 mode |= p
             else:
                 mode &= ~p
-        set_mode(os_file_system.getsyspath(input_path_item), mode)
+        set_mode(sys_path, mode)
     except MissingInfoNamespace:
         pass
     except FileNotFoundError:
