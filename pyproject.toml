@@ -46,6 +46,7 @@ version = "^223"
 [tool.poetry.dev-dependencies]
 pytest = ">=4.6"
 pytest-cov = ">=2.6.0"
+pytest-xdist = ">=3.0.0"
 pylint = "^3.0"
 radon = ">=2.0.3"
 invoke = "^2.0"
