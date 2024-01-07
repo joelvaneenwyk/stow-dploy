@@ -68,9 +68,7 @@ Permission_Write = [Permission.u_w, Permission.g_w, Permission.o_w]
 Permission_Execute = [Permission.u_x, Permission.g_x, Permission.o_x]
 
 
-def update_permissions(
-    path: StowPath, operation: Operation, *permissions: Permission
-) -> None:
+def update_permissions(path: StowPath, operation: Operation, *permissions: Permission) -> None:
     """Add or remove permission(s) from a file or directory."""
     try:
         os_file_system, input_path_item = _get_fs(path)

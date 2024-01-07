@@ -16,9 +16,7 @@ import dploy.cli
 def test_cli_with_stow_with_simple_scenario(source_only_files, dest, capsys):
     args = ["stow", source_only_files, dest]
     dploy.cli.run(args)
-    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
-        "..", "source_only_files", "aaa"
-    )
+    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_only_files", "aaa")
     out, _ = capsys.readouterr()
     d = os.path.join(dest, "aaa")
     s = os.path.relpath(os.path.join(source_only_files, "aaa"), dest)
@@ -28,9 +26,7 @@ def test_cli_with_stow_with_simple_scenario(source_only_files, dest, capsys):
 def test_cli_unstow_with_basic_scenario(source_a, dest, capsys):
     args_stow = ["stow", source_a, dest]
     dploy.cli.run(args_stow)
-    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
-        "..", "source_a", "aaa"
-    )
+    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_a", "aaa")
 
     args_unstow = ["unstow", source_a, dest]
     dploy.cli.run(args_unstow)
@@ -40,8 +36,7 @@ def test_cli_unstow_with_basic_scenario(source_a, dest, capsys):
     src_dir = os.path.relpath(os.path.join(source_a, "aaa"), dest)
     dest_dir = os.path.join(dest, "aaa")
     expected_output = (
-        "dploy stow: link {dest_dir} => {src_dir}\n"
-        "dploy unstow: unlink {dest_dir} => {src_dir}\n".format(
+        "dploy stow: link {dest_dir} => {src_dir}\n" "dploy unstow: unlink {dest_dir} => {src_dir}\n".format(
             src_dir=src_dir, dest_dir=dest_dir
         )
     )
@@ -60,9 +55,7 @@ def test_cli_with_link_directory(source_a, dest, capsys):
     assert output == expected_output
 
 
-def test_cli_with_dry_run_option_with_stow_with_simple_scenario(
-    source_only_files, dest, capsys
-):
+def test_cli_with_dry_run_option_with_stow_with_simple_scenario(source_only_files, dest, capsys):
     args = ["--dry-run", "stow", source_only_files, dest]
     dploy.cli.run(args)
     assert not os.path.exists(os.path.join(dest, "aaa"))
@@ -72,14 +65,10 @@ def test_cli_with_dry_run_option_with_stow_with_simple_scenario(
     assert out == "dploy stow: link {dest} => {source}\n".format(source=s, dest=d)
 
 
-def test_cli_with_silent_option_with_stow_with_simple_scenario(
-    source_only_files, dest, capsys
-):
+def test_cli_with_silent_option_with_stow_with_simple_scenario(source_only_files, dest, capsys):
     args = ["--silent", "stow", source_only_files, dest]
     dploy.cli.run(args)
-    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
-        "..", "source_only_files", "aaa"
-    )
+    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_only_files", "aaa")
     out, _ = capsys.readouterr()
     assert out == ""
 

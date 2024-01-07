@@ -50,9 +50,7 @@ class SourceIsSameAsDest(DployError):
     """A source argument is the same as the dest argument"""
 
     def __init__(self, subcmd, file):
-        self.msg = (
-            ERROR_HEAD + "'{file}': A source argument is the same as the dest argument"
-        )
+        self.msg = ERROR_HEAD + "'{file}': A source argument is the same as the dest argument"
         self.msg = self.msg.format(subcmd=subcmd, file=file)
         # self.exception = ValueError(self.msg)
 

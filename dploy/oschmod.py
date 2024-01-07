@@ -514,18 +514,7 @@ W_GENRD = GENERIC_READ                # = -10000000000000000000000000000000
 # fmt: on
 
 W_DIRRD = W_FLDIR | W_FRDEA | W_FRDAT | W_RDCON | W_SYNCH
-W_DIRWR = (
-    W_FADFL
-    | W_FADSD
-    | W_FWREA
-    | W_FDLCH
-    | W_FWRAT
-    | W_DELET
-    | W_RDCON
-    | W_WRDAC
-    | W_WROWN
-    | W_SYNCH
-)
+W_DIRWR = W_FADFL | W_FADSD | W_FWREA | W_FDLCH | W_FWRAT | W_DELET | W_RDCON | W_WRDAC | W_WROWN | W_SYNCH
 W_DIREX = W_FTRAV | W_RDCON | W_SYNCH
 
 W_FILRD = W_FGNRD
@@ -639,9 +628,7 @@ def set_mode(path: ModePath, mode: ModeValue) -> ModeValue:
     return new_mode
 
 
-def set_mode_recursive(
-    path: ModePath, mode: ModeValue, dir_mode: Optional[ModeValue] = None
-) -> ModeValue:
+def set_mode_recursive(path: ModePath, mode: ModeValue, dir_mode: Optional[ModeValue] = None) -> ModeValue:
     r"""
     Set all file and directory permissions at or under path to modes.
 
@@ -703,11 +690,7 @@ def get_effective_mode(current_mode: ModeValue, symbolic: str):
 
     # bitwise magic
     bit_perm = _get_basic_symbol_to_mode(perm)
-    mask_mode = (
-        ("u" in whom and bit_perm << 6)
-        | ("g" in whom and bit_perm << 3)
-        | ("o" in whom and bit_perm << 0)
-    )
+    mask_mode = ("u" in whom and bit_perm << 6) | ("g" in whom and bit_perm << 3) | ("o" in whom and bit_perm << 0)
 
     if operation == "=":
         original = (
@@ -758,9 +741,7 @@ def win_get_owner_sid(path: ModePath) -> PySID:
 
 def win_get_group_sid(path: ModePath) -> PySID:
     """Get the file group."""
-    sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(
-        path, SE_FILE_OBJECT, GROUP_SECURITY_INFORMATION
-    )
+    sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(path, SE_FILE_OBJECT, GROUP_SECURITY_INFORMATION)
     return sec_descriptor.GetSecurityDescriptorGroup()  # type: ignore
 
 
@@ -773,25 +754,18 @@ def win_get_other_sid() -> PySID:
     return ConvertStringSidToSid("S-1-5-32-545")
 
 
-def convert_win_to_stat(
-    win_perm: ModeValue, user_type: ModeUserType, object_type: ModeObjectType
-) -> ModeValue:
+def convert_win_to_stat(win_perm: ModeValue, user_type: ModeUserType, object_type: ModeObjectType) -> ModeValue:
     """Given Win perm and user type, give stat mode."""
     mode = 0
 
     for oper in OPER_TYPES:
-        if (
-            win_perm & WIN_RWX_PERMS[object_type][oper]
-            == WIN_RWX_PERMS[object_type][oper]
-        ):
+        if win_perm & WIN_RWX_PERMS[object_type][oper] == WIN_RWX_PERMS[object_type][oper]:
             mode = mode | STAT_MODES[user_type][oper]
 
     return mode
 
 
-def convert_stat_to_win(
-    mode: ModeValue, user_type: ModeUserType, object_type: ModeObjectType
-) -> ModeValue:
+def convert_stat_to_win(mode: ModeValue, user_type: ModeUserType, object_type: ModeObjectType) -> ModeValue:
     """Given stat mode, return Win bitwise permissions for user type."""
     win_perm = 0
 
@@ -834,11 +808,7 @@ def win_get_permissions(path: ModePath) -> ModeValue:
 
 def _get_basic_symbol_to_mode(symbol: str) -> ModeValue:
     """Calculate numeric value of set of 'rwx'."""
-    return (
-        ("r" in symbol and 1 << 2)
-        | ("w" in symbol and 1 << 1)
-        | ("x" in symbol and 1 << 0)
-    )
+    return ("r" in symbol and 1 << 2) | ("w" in symbol and 1 << 1) | ("x" in symbol and 1 << 0)
 
 
 def _win_get_permissions(path: str, object_type) -> ModeValue:
@@ -851,14 +821,9 @@ def _win_get_permissions(path: str, object_type) -> ModeValue:
 
     for index in range(0, dacl.GetAceCount()):
         ace = dacl.GetAce(index)
-        if (
-            ace[0][0] == ACCESS_ALLOWED_ACE_TYPE
-            and LookupAccountSid(str(), ace[2]) != SECURITY_NT_AUTHORITY
-        ):
+        if ace[0][0] == ACCESS_ALLOWED_ACE_TYPE and LookupAccountSid(str(), ace[2]) != SECURITY_NT_AUTHORITY:
             # Not handling ACCESS_DENIED_ACE_TYPE
-            mode = mode | convert_win_to_stat(
-                ace[1], win_get_user_type(ace[2], sids), object_type
-            )
+            mode = mode | convert_win_to_stat(ace[1], win_get_user_type(ace[2], sids), object_type)
 
     return mode
 
@@ -879,20 +844,14 @@ def _win_set_permissions(path: str, mode: ModeValue, object_type: ModeObjectType
     # Here we read effective permissions with GetNamedSecurityInfo, i.e.,
     # including inherited permissions. However, we'll set permissions with
     # SetFileSecurity and NO_INHERITANCE, to disable inheritance.
-    sec_des: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(
-        path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION
-    )
+    sec_des: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION)
     dacl: PyACL = sec_des.GetSecurityDescriptorDacl()
 
     system_ace = None
     for _ in range(0, dacl.GetAceCount()):
         ace = dacl.GetAce(0)
         try:
-            if (
-                ace[2]
-                and ace[2].IsValid()
-                and LookupAccountSid(str(), ace[2]) == SECURITY_NT_AUTHORITY
-            ):
+            if ace[2] and ace[2].IsValid() and LookupAccountSid(str(), ace[2]) == SECURITY_NT_AUTHORITY:
                 system_ace = ace
         except error:
             print("Found orphaned SID:", ace[2])
@@ -912,9 +871,7 @@ def _win_set_permissions(path: str, mode: ModeValue, object_type: ModeObjectType
         win_perm = convert_stat_to_win(mode, user_type, object_type)
 
         if win_perm > 0:
-            dacl.AddAccessAllowedAceEx(
-                dacl.GetAclRevision(), NO_INHERITANCE, win_perm, sid
-            )
+            dacl.AddAccessAllowedAceEx(dacl.GetAclRevision(), NO_INHERITANCE, win_perm, sid)
 
     sec_des.SetSecurityDescriptorDacl(1, dacl, 0)  # type: ignore
     SetFileSecurity(path, DACL_SECURITY_INFORMATION, sec_des)
@@ -957,10 +914,7 @@ def print_win_permissions(win_perm, flags, object_type):
     else:
         permissions = WIN_DIR_PERMISSIONS
         # directories have ACE that is inherited by children within them
-        if (
-            flags & OBJECT_INHERIT_ACE == OBJECT_INHERIT_ACE
-            and flags & INHERIT_ONLY_ACE == INHERIT_ONLY_ACE
-        ):
+        if flags & OBJECT_INHERIT_ACE == OBJECT_INHERIT_ACE and flags & INHERIT_ONLY_ACE == INHERIT_ONLY_ACE:
             permissions = WIN_DIR_INHERIT_PERMISSIONS
 
     calc_mask = 0  # see if we are printing all of the permissions

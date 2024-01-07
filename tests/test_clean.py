@@ -29,9 +29,7 @@ def test_clean_after_stow_removing_invalid_link_from_source(source_a, dest):
     assert os.readlink(dest_path) == broken
     dploy.clean([source_a], dest)
     assert not os.path.exists(dest_path)
-    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join(
-        "..", "source_a", "aaa"
-    )
+    assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_a", "aaa")
 
 
 def test_clean_after_stow_not_removing_invalid_link_from_other_source(source_a, dest):

@@ -34,9 +34,7 @@ def create_parser():
         action="version",
         version="%(prog)s {version}".format(version=version.__version__),
     )
-    parser.add_argument(
-        "--silent", dest="is_silent", action="store_true", help="suppress all output"
-    )
+    parser.add_argument("--silent", dest="is_silent", action="store_true", help="suppress all output")
     parser.add_argument(
         "--dry-run",
         dest="is_dry_run",
@@ -52,16 +50,12 @@ def create_parser():
     add_ignore_argument(stow_parser)
 
     unstow_parser = sub_parsers.add_parser("unstow")
-    unstow_parser.add_argument(
-        "source", nargs="+", help="source directory to unstow from"
-    )
+    unstow_parser.add_argument("source", nargs="+", help="source directory to unstow from")
     unstow_parser.add_argument("dest", help="destination path to unstow")
     add_ignore_argument(unstow_parser)
 
     clean_parser = sub_parsers.add_parser("clean")
-    clean_parser.add_argument(
-        "source", nargs="+", help="source directory to clean from"
-    )
+    clean_parser.add_argument("source", nargs="+", help="source directory to clean from")
     clean_parser.add_argument("dest", help="destination path to clean")
     add_ignore_argument(clean_parser)
 

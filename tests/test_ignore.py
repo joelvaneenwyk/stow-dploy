@@ -32,9 +32,7 @@ def test_ignore_by_ignoring_everything__(source_a: str, source_c: str, dest: str
     assert not os.path.exists(os.path.join(dest, "aaa"))
 
 
-def test_ignore_file_by_ignoring_everything__(
-    source_a, source_c, file_dploystowignore, dest
-):
+def test_ignore_file_by_ignoring_everything__(source_a, source_c, file_dploystowignore, dest):
     ignore_patterns = ["*/aaa"]
     with open(file_dploystowignore, "w", encoding="utf8") as file:
         file.write("\n".join(ignore_patterns))
