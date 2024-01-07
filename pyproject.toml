@@ -49,13 +49,27 @@ pytest-cov = ">=2.6.0"
 pylint = "^3.0"
 radon = ">=2.0.3"
 invoke = "^2.0"
-black = "^21.9b0"
+black = ">22.3.0"
 ruff = ">=0.1.0"
+
+[tool.ruff]
+exclude = [
+    # line length, let pylint handle this
+    "E501",
+    # line break before binary operator
+    "W503",
+    # line break after binary operator
+    "W504",
+    # undefined name, let pylint handle this
+    "F821",
+]
+include = ["dploy/*.py", "tests/*.py", "tasks.py"]
+line-length = 120
 
 [tool.pylint]
 max-line-length = 120
 ignore-patterns = [
-    "(?:.*[/\\\\]|^)(?:site-packages|__pycache__|\\.venv|\\.mypy_cache|\\.pytest_cache|\\.ruff_cache)(?:[/\\\\]|$)"
+    "(?:.*[/\\\\]|^)(?:site-packages|__pycache__|\\.venv|\\.mypy_cache|\\.pytest_cache|\\.ruff_cache)(?:[/\\\\]|$)",
 ]
 
 [tool.pylint.message_control]
@@ -64,7 +78,7 @@ disable = [
     "duplicate-code",
     "len-as-condition",
     "unnecessary-pass",
-    "consider-using-f-string"
+    "consider-using-f-string",
 ]
 
 [tool.pylint.reports]

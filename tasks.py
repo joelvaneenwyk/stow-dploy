@@ -51,7 +51,7 @@ def lint(ctx):
     """
     Run pylint on this module
     """
-    cmds = ["pylint --output-format=parseable", "flake8"]
+    cmds = ["pylint --output-format=parseable", "ruff"]
     base_cmd = "python -m {cmd} {files}"
 
     for cmd in cmds:
@@ -63,7 +63,7 @@ def reformat_check(ctx):
     """
     Run formatting check
     """
-    cmd = "black --check"
+    cmd = "ruff format --check"
     base_cmd = "python -m {cmd} {files}"
     ctx.run(base_cmd.format(cmd=cmd, files=get_files()), **RUN_ARGS)
 
@@ -73,7 +73,7 @@ def reformat(ctx):
     """
     Run formatting
     """
-    cmd = "black"
+    cmd = "ruff format"
     base_cmd = "python -m {cmd} {files}"
     ctx.run(base_cmd.format(cmd=cmd, files=get_files()), **RUN_ARGS)
 
@@ -99,14 +99,6 @@ def test(ctx):
     ctx.run(cmd, **RUN_ARGS)
 
 
-# pylint: disable=redefined-builtin
-@task(test, lint, reformat_check)
-def all(default=True):
-    """
-    All tasks minus
-    """
-
-
 @task(clean)
 def build(ctx):
     """
@@ -114,3 +106,9 @@ def build(ctx):
     """
     cmd = "pyinstaller -n dploy --onefile " + os.path.join("dploy", "__main__.py")
     ctx.run(cmd, **RUN_ARGS)
+
+
+# pylint: disable=redefined-builtin
+@task(test, lint, reformat_check, build)
+def all(default=True):
+    """Run all critical tasks."""
