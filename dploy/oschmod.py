@@ -238,7 +238,7 @@ import re
 import stat
 import string
 from enum import IntEnum, auto
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeAlias, Union
 
 ModePath = Union[os.PathLike[str], pathlib.Path, str]
 ModeValue = int
@@ -412,7 +412,10 @@ try:
 except ImportError:
     HAS_PWD = False
 
-    from _typeshed import structseq
+    try:
+        from _typeshed import structseq  # type: ignore
+    except ImportError:
+        structseq: TypeAlias = Any  # type: ignore[no-redef]  # pylint: disable=invalid-name
 
     class struct_passwd(structseq[Any], tuple[str, str, int, int, str, str, str]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
         """Placeholder class on import error"""
@@ -447,11 +450,11 @@ except ImportError:
 
     def getpwuid(__uid: int) -> struct_passwd:  # type: ignore[misc]  # pylint: disable=unused-argument
         """Placeholder method"""
-        return struct_passwd([], {})
+        return struct_passwd([])
 
     def getgrgid(__uid: int) -> struct_group:  # type: ignore[misc]   # pylint: disable=unused-argument
         """Placeholder method"""
-        return struct_group([], {})
+        return struct_group([])
 
 
 __version__ = "0.3.12"

@@ -55,7 +55,7 @@ def make_mode(init):
     return Permissions.get_mode(init)
 
 
-class _PermProperty(object):
+class _PermProperty:
     """Creates simple properties to get/set permissions."""
 
     def __init__(self, name):
@@ -74,7 +74,7 @@ class _PermProperty(object):
             obj.remove(self._name)
 
 
-class Permissions(object):
+class Permissions:
     """An abstraction for file system permissions.
 
     Permissions objects store information regarding the permissions
@@ -108,18 +108,17 @@ class Permissions(object):
     ]
     _LINUX_PERMS_NAMES: list[str] = [_name for _name, _mask in _LINUX_PERMS]
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
-        names=None,  # type: Optional[Iterable[str]]
-        mode=None,  # type: Optional[int]
-        user=None,  # type: Optional[str]
-        group=None,  # type: Optional[str]
-        other=None,  # type: Optional[str]
-        sticky=None,  # type: Optional[bool]
-        setuid=None,  # type: Optional[bool]
-        setguid=None,  # type: Optional[bool]
-    ):
-        # type: (...) -> None
+        names: Optional[Iterable[str]] = None,
+        mode: Optional[int] = None,
+        user: Optional[str] = None,
+        group: Optional[str] = None,
+        other: Optional[str] = None,
+        sticky: Optional[bool] = None,
+        setuid: Optional[bool] = None,
+        setguid: Optional[bool] = None,
+    ) -> None:
         """Create a new `Permissions` instance.
 
         Arguments:
