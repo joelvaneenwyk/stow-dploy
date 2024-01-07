@@ -287,21 +287,21 @@ except ImportError:
         raise
 
 try:
-    import win32security  # type: ignore[import-untyped]
+    import win32security  # type: ignore[import-untyped,import-not-found]
 except ImportError:
     if TYPE_CHECKING:
         raise
     win32security = object()
 
 try:
-    import ntsecuritycon  # type: ignore[import-untyped]
+    import ntsecuritycon  # type: ignore[import-untyped,import-not-found]
 except ImportError:
     if TYPE_CHECKING:
         raise
     ntsecuritycon = object()
 
 try:
-    from ntsecuritycon import (
+    from ntsecuritycon import (  # type: ignore[reportMissingModuleSource]
         DELETE,
         FILE_ADD_FILE,
         FILE_ADD_SUBDIRECTORY,
@@ -326,7 +326,7 @@ try:
         WRITE_DAC,
         WRITE_OWNER,
     )
-    from win32security import (
+    from win32security import (  # type: ignore[reportMissingModuleSource]
         ACCESS_ALLOWED_ACE_TYPE,
         DACL_SECURITY_INFORMATION,
         GROUP_SECURITY_INFORMATION,
@@ -427,9 +427,6 @@ except ImportError:
         """Placeholder method"""
         return Pwd()
 
-
-if IS_WINDOWS and not HAS_PYWIN32:
-    raise ImportError("win32security and ntsecuritycon required on Windows")
 
 __version__ = "0.3.12"
 

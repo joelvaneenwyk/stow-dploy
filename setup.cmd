@@ -1,7 +1,6 @@
 @echo off
 goto:$Main
 
-goto:$Command
 :Command
     goto:$CommandVar
     :CommandVar
@@ -30,14 +29,12 @@ goto:$Command
             exit /b %_error_value%
         )
     :$CommandVar
-
-    setlocal EnableDelayedExpansion
-        set "_command=%*"
-        call :CommandVar "_command"
-    endlocal & (
-        exit /b %ERRORLEVEL%
-    )
-:$Command
+setlocal EnableDelayedExpansion
+    set "_command=%*"
+    call :CommandVar "_command"
+endlocal & (
+    exit /b %ERRORLEVEL%
+)
 
 :Sudo
     call gsudo status IsElevated --no-output && goto:$IsElevated

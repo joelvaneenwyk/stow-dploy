@@ -11,7 +11,7 @@ pylint>=1.5.5
 pytest-cov>=2.4.0
 pytest-github-actions-annotate-failures
 pytest-xdist
-pytest>=2.9.1
+pytest>=6.0.0
 pywin32>=306; sys_platform == 'win32'
 radon>=1.4.2
 ruff
