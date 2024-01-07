@@ -12,6 +12,8 @@
             "!Module"
         ]
     },
+    "pylint.showNotifications": "always",
+    "pylint.lintOnChange": true,
     "cSpell.words": [
         "abatilo",
         "capsys",
