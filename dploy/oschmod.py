@@ -242,7 +242,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 ModePath = Union[os.PathLike[str], pathlib.Path, str]
 ModeValue = int
-ModeSidObject = tuple[str, str, Any]
+ModeSidObject = Union[tuple[str, str, Any], str]
 
 PySidDefault = ("", "", 0)
 
@@ -417,29 +417,41 @@ except ImportError:
     class struct_passwd(structseq[Any], tuple[str, str, int, int, str, str, str]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
         """Placeholder class on import error"""
 
-        def __init__(self):
-            pass
+        @property
+        def pw_name(self) -> str:
+            """Placeholder"""
+            return ""
 
-    class struct_group(structseq[Any], tuple[str, str, int, int, str, str, str]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
+    class struct_group(structseq[Any], tuple[str, str | None, int, list[str]]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
         """Placeholder class on import error"""
 
-        def __init__(self):
-            pass
+        @property
+        def gr_name(self) -> str:
+            """Placeholder"""
+            return ""
 
-    class Pwd:  # pylint: disable=too-few-public-methods
-        """Placeholder class on import error"""
+        @property
+        def gr_passwd(self) -> str | None:
+            """Placeholder"""
+            return None
 
-        pw_name: ModeSidObject = PySidDefault
-        pw_uid: ModeSidObject = PySidDefault
-        gr_name: ModeSidObject = PySidDefault
+        @property
+        def gr_gid(self) -> int:
+            """Placeholder"""
+            return 0
+
+        @property
+        def gr_mem(self) -> list[str]:
+            """Placeholder"""
+            return []
 
     def getpwuid(__uid: int) -> struct_passwd:  # type: ignore[misc]  # pylint: disable=unused-argument
         """Placeholder method"""
-        return struct_passwd()
+        return struct_passwd([], {})
 
-    def getgrgid(__uid: int) -> struct_passwd:  # type: ignore[misc]   # pylint: disable=unused-argument
+    def getgrgid(__uid: int) -> struct_group:  # type: ignore[misc]   # pylint: disable=unused-argument
         """Placeholder method"""
-        return struct_group()
+        return struct_group([], {})
 
 
 __version__ = "0.3.12"
@@ -752,7 +764,7 @@ def win_get_owner_sid(path: ModePath) -> PySID:
 
 def win_get_group_sid(path: ModePath) -> PySID:
     """Get the file group."""
-    sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(path, SE_FILE_OBJECT, GROUP_SECURITY_INFORMATION)
+    sec_descriptor: PySECURITY_DESCRIPTOR = GetNamedSecurityInfo(str(path), SE_FILE_OBJECT, GROUP_SECURITY_INFORMATION)
     return sec_descriptor.GetSecurityDescriptorGroup()  # type: ignore
 
 
