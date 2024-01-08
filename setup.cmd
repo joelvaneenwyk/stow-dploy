@@ -76,29 +76,56 @@ setlocal EnableDelayedExpansion
     :$CleanupDone
 endlocal & exit /b %_return_value%
 
+:InstallPyEnv
+    setlocal EnableDelayedExpansion
+    if not exist "%~dp0build" mkdir "%~dp0build"
+    set "_cmd=Invoke-WebRequest -UseBasicParsing"
+    set "_cmd=!_cmd! -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" "
+    set "_cmd=!_cmd! -OutFile "%~dp0build\install-pyenv-win.ps1" "
+    call :Command pwsh -NoProfile -Command !_cmd!
+    call :Command pwsh -NoProfile -File "%~dp0build\install-pyenv-win.ps1"
+
+    where pyenv >nul 2>&1
+    if errorlevel 1 goto:$AddPyEnvToPath
+    goto:$InstallPyEnvDone
+
+    :$AddPyEnvToPath
+    set "PATH=%PATH%;%USERPROFILE%\.pyenv\pyenv-win\bin"
+    goto:$InstallPyEnvDone
+
+    :$InstallPyEnvDone
+endlocal & (
+    set "PATH=%PATH%"
+    exit /b %ERRORLEVEL%
+)
+
 :$Main
 setlocal EnableExtensions
     call :ClearError
 
-    if not "%~1"=="act" goto:$MainSkipDocker
+    set VIRTUAL_ENV_DISABLE_PROMPT=1
+
+    if "%~1"=="act" goto:$MainDockerAct
+    goto:$MainSetup
+
+    :$MainDockerAct
     call :Command docker pull "ghcr.io/catthehacker/ubuntu:full-latest"
     call :Command act --pull=false
     goto:$MainDone
 
-    :$MainSkipDocker
+    :$MainSetup
+    call :InstallPyEnv
+
     call :TrySudo py -3 -m pip install --no-warn-script-location --upgrade pip
     if errorlevel 1 goto:$MainError
     call :Command py -3 -m pip install --upgrade --user --no-warn-script-location -r "%~dp0requirements.txt"
     if errorlevel 1 goto:$MainError
-
     call :Command scoop install pipx
     if errorlevel 1 goto:$MainError
     call :Command scoop update pipx
     if errorlevel 1 goto:$MainError
     call :Command pipx install poetry
     if errorlevel 1 goto:$MainError
-
-    set VIRTUAL_ENV_DISABLE_PROMPT=1
 
     call :Command pipx run poetry run pip install --no-warn-script-location --upgrade pip setuptools wheel pytest-github-actions-annotate-failures
     if errorlevel 1 goto:$MainError
@@ -121,4 +148,8 @@ setlocal EnableExtensions
 
     :$MainDone
     call :Cleanup
-endlocal & exit /b %ERRORLEVEL%
+endlocal & (
+    set "PATH=%PATH%"
+    set "VIRTUAL_ENV_DISABLE_PROMPT=1"
+    exit /b %ERRORLEVEL%
+)
