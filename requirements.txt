@@ -24,3 +24,4 @@ types-setuptools>=65.4.0.0
 virtualenv>=15.0.3
 wheel
 pyinstaller
+tox

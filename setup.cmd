@@ -99,11 +99,103 @@ endlocal & (
     exit /b %ERRORLEVEL%
 )
 
+:PipX
+    setlocal EnableDelayedExpansion
+    set "_pipx_error_level=0"
+    call pipx --version >nul 2>&1
+    if errorlevel 1 goto:$InstallPipX
+    goto:$FoundPipX
+
+    :$InstallPipX
+    if "%PIPX_SETUP%"=="1" goto:$RunPipX
+    call :Command scoop install pipx
+    if errorlevel 1 goto:$PipXError
+    call :Command scoop update pipx
+    if errorlevel 1 goto:$PipXError
+
+    :$FoundPipX
+    set PIPX_SETUP=1
+    goto:$RunPipX
+
+    :$RunPipX
+    if exist "%~dp0.venv\Scripts\deactivate.bat" call "%~dp0.venv\Scripts\deactivate.bat"
+    :: https://github.com/pypa/pipx/issues/1091
+    cd /D "%~dp0"
+    call :Command pipx %*
+    set "_pipx_error_level=%ERRORLEVEL%"
+    goto:$PipXDone
+
+    :$PipXError
+    goto:$PipXDone
+
+    :$PipXDone
+endlocal & (
+    set "PIPX_SETUP=%PIPX_SETUP%"
+    exit /b %_pipx_error_level%
+)
+
+:Poetry
+    setlocal EnableDelayedExpansion
+    set "_error_level=0"
+    set "_attempted_poetry_install=0"
+
+    ::=====================================
+    :: Attempt to run Poetry using global install version and then, as backup, use pipx.
+    ::=====================================
+    goto:PoetryRunEnd
+    :PoetryRun
+        call poetry --version >nul 2>&1
+        if errorlevel 1 goto:$PoetryRunPipX
+        set POETRY_SETUP=1
+        call :Command poetry %*
+        goto:$PoetryRunDone
+
+        :$PoetryRunPipX
+        call :PipX run poetry --version >nul 2>&1
+        if errorlevel 1 goto:$PoetryRunMissing
+        set POETRY_SETUP=1
+        call :PipX run poetry %*
+        goto:$PoetryRunDone
+
+        :$PoetryRunMissing
+        if "!_attempted_poetry_install!"=="1" goto:$SkipPoetryInstall
+        set _attempted_poetry_install=1
+        call :PipX install poetry
+        goto:PoetryRun
+
+        :$SkipPoetryInstall
+        goto:$PoetryRunDone
+
+        :$PoetryRunDone
+    exit /b %ERRORLEVEL%
+    :PoetryRunEnd
+
+    call :PoetryRun %*
+    set "_error_level=%ERRORLEVEL%"
+    goto:$PoetryDone
+
+    :$PoetryError
+    set "_error_level=%ERRORLEVEL%"
+    echo [ERROR] Poetry run failed. Return code: "!_error_level!"
+    goto:$PoetryDone
+
+    :$PoetryDone
+endlocal & (
+    set "POETRY_SETUP=%POETRY_SETUP%"
+    exit /b %_error_level%
+)
+
+:Python
+    setlocal EnableDelayedExpansion
+    set VIRTUAL_ENV_DISABLE_PROMPT=1
+    if exist "%~dp0.venv\Scripts\activate.bat" call "%~dp0.venv\Scripts\activate.bat"
+    cd "%~dp0"
+    call :Command py -3 %*
+endlocal & exit /b %ERRORLEVEL%
+
 :$Main
 setlocal EnableExtensions
     call :ClearError
-
-    set VIRTUAL_ENV_DISABLE_PROMPT=1
 
     if "%~1"=="act" goto:$MainDockerAct
     goto:$MainSetup
@@ -118,30 +210,27 @@ setlocal EnableExtensions
 
     call :TrySudo py -3 -m pip install --no-warn-script-location --upgrade pip
     if errorlevel 1 goto:$MainError
-    call :Command py -3 -m pip install --upgrade --user --no-warn-script-location -r "%~dp0requirements.txt"
-    if errorlevel 1 goto:$MainError
-    call :Command scoop install pipx
-    if errorlevel 1 goto:$MainError
-    call :Command scoop update pipx
-    if errorlevel 1 goto:$MainError
-    call :Command pipx install poetry
+    call :Python -m pip install --upgrade --user --no-warn-script-location -r "%~dp0requirements.txt"
     if errorlevel 1 goto:$MainError
 
-    call :Command pipx run poetry run pip install --no-warn-script-location --upgrade pip setuptools wheel pytest-github-actions-annotate-failures
+    call :Poetry run pip install --no-warn-script-location --upgrade pip setuptools wheel pytest-github-actions-annotate-failures
     if errorlevel 1 goto:$MainError
 
-    call :Command pipx run poetry install --no-interaction --with dev
+    call :Poetry install --no-interaction --with dev
     if errorlevel 1 goto:$MainError
 
-    call :Command pipx run poetry lock
+    call :Poetry lock
     if errorlevel 1 goto:$MainError
 
-    call :Command pipx run poetry run ruff .
+    call :Poetry run ruff .
     if errorlevel 1 goto:$MainError
 
-    call :Command pipx run poetry shell
-    if errorlevel 1 goto:$MainError
+    echo [INFO] Setup complete for 'stow-dploy' package.
+    goto:$MainDone
 
+    ::=====================================
+    :: Error handling
+    ::=====================================
     :$MainError
         echo [Error] Error during setup. Error level: '%ERRORLEVEL%'
         goto:$MainDone
@@ -150,6 +239,6 @@ setlocal EnableExtensions
     call :Cleanup
 endlocal & (
     set "PATH=%PATH%"
-    set "VIRTUAL_ENV_DISABLE_PROMPT=1"
+    set "VIRTUAL_ENV_DISABLE_PROMPT=%PATH%"
     exit /b %ERRORLEVEL%
 )
