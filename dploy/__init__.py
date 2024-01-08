@@ -38,7 +38,7 @@ def unstow(
 
 
 def clean(
-    sources: StowPath,
+    sources: StowSources,
     dest: StowPath,
     is_silent: bool = True,
     is_dry_run: bool = False,

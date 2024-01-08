@@ -275,6 +275,10 @@ except ImportError:
             """Placeholder method"""
             pass
 
+        def GetSecurityDescriptorDacl(self) -> PySID:
+            """Placeholder method"""
+            return PySID()
+
         def GetSecurityDescriptorGroup(self) -> PySID:
             """Placeholder method"""
             return PySID()
