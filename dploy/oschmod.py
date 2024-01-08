@@ -417,7 +417,7 @@ except ImportError:
     except ImportError:
         _T_co = TypeVar("_T_co", covariant=True)
 
-        class structseq(Generic[_T_co]):  # type: ignore[no-redef]  # pylint: disable=invalid-name
+        class structseq(Generic[_T_co]):  # type: ignore[no-redef]  # pylint: disable=invalid-name,too-few-public-methods
             """Placeholder class on import error"""
 
             pass
@@ -430,7 +430,7 @@ except ImportError:
             """Placeholder"""
             return ""
 
-    class struct_group(structseq[Any], tuple[str, str | None, int, list[str]]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
+    class struct_group(structseq[Any], tuple[str, Optional[str], int, list[str]]):  # type: ignore[no-redef]  # pylint: disable=too-few-public-methods,invalid-name
         """Placeholder class on import error"""
 
         @property
@@ -439,7 +439,7 @@ except ImportError:
             return ""
 
         @property
-        def gr_passwd(self) -> str | None:
+        def gr_passwd(self) -> Optional[str]:
             """Placeholder"""
             return None
 
