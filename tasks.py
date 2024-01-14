@@ -4,10 +4,7 @@ Project Tasks that can be invoked using using the program "invoke" or "inv"
 
 import os
 
-from invoke import task  # type: ignore
-
-# disable the check for unused-arguments to ignore unused ctx parameter in tasks
-# pylint: disable=unused-argument
+from invoke import Context, task  # type: ignore
 
 IS_WINDOWS = os.name == "nt"
 if IS_WINDOWS:
@@ -29,19 +26,19 @@ def get_files():
 
 
 @task
-def setup(ctx):
+def setup(ctx: Context):
     """Install python requirements"""
     ctx.run("python -m pip install -r requirements.txt", **RUN_ARGS)
 
 
 @task
-def clean(ctx):
+def clean(ctx: Context):
     """Clean repository using git"""
     ctx.run("git clean --interactive", **RUN_ARGS)
 
 
 @task
-def lint(ctx):
+def lint(ctx: Context):
     """Run pylint on this module"""
     cmds = ["pylint --output-format=parseable", "ruff"]
     base_cmd = "python -m {cmd} {files}"
@@ -51,7 +48,7 @@ def lint(ctx):
 
 
 @task
-def reformat_check(ctx):
+def reformat_check(ctx: Context):
     """Run formatting check"""
     cmd = "ruff format --check"
     base_cmd = "python -m {cmd} {files}"
@@ -59,7 +56,7 @@ def reformat_check(ctx):
 
 
 @task
-def reformat(ctx):
+def reformat(ctx: Context):
     """Run formatting"""
     cmd = "ruff format"
     base_cmd = "python -m {cmd} {files}"
@@ -67,7 +64,7 @@ def reformat(ctx):
 
 
 @task
-def metrics(ctx):
+def metrics(ctx: Context):
     """Run radon code metrics on this module"""
     cmd = "radon {metric} --min B {files}"
     metrics_to_run = ["cc", "mi"]
@@ -76,20 +73,21 @@ def metrics(ctx):
 
 
 @task()
-def test(ctx):
-    """Test Task"""
-    # Use py.test instead of the recommended pytest so it works on Python 3.3
+def test(ctx: Context):
+    """Run 'pytest' on package.
+
+    We use 'py.test' instead of the recommended pytest so it works on Python v3.3 release."""
     cmd = "py.test --cov-report term-missing --cov=dploy --color=no"
     ctx.run(cmd, **RUN_ARGS)
 
 
 @task(clean)
-def build(ctx):
+def build(ctx: Context):
     """Task to build an executable using pyinstaller"""
     cmd = "pyinstaller --clean --noconfirm --name dploy --onefile " + os.path.join("dploy", "__main__.py")
     ctx.run(cmd, **RUN_ARGS)
 
 
 @task(test, lint, reformat_check)
-def all(default=True):  # pylint: disable=redefined-builtin
+def all(default=True):  # pylint: disable=redefined-builtin,unused-argument
     """Run all critical tasks."""
