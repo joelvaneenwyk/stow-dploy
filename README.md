@@ -2,7 +2,7 @@
 
 Dploy is a tool for creating symbolic links similarly to [GNU
 Stow](https://www.gnu.org/software/stow/). It is provided as a CLI tool and
-Python 3.6.2+ module and supports Windows, Linux, and OSX.
+Python 3.8+ module and supports Windows, Linux, and OSX.
 
 Dploy's command `stow` creates symbolic links to the contents of source
 directories or packages in a specified destination directory. Repeating the
@@ -15,14 +15,14 @@ that the links to stowed packages have been removed.
 
 ## Installation
 
-* Latest Release: `pip install dploy`
-* Development Version: `pip install git+https://github.com/arecarn/dploy.git`
+- Latest Release: `pip install dploy`
+- Development Version: `pip install git+https://github.com/arecarn/dploy.git`
 
 ## Basic CLI Usage
 
-* `dploy stow <source-directory>... <destination-directory>`
-* `dploy unstow <source-directory>... <destination-directory>`
-* `dploy --help`
+- `dploy stow <source-directory>... <destination-directory>`
+- `dploy unstow <source-directory>... <destination-directory>`
+- `dploy --help`
 
 ## Rationale
 
@@ -45,18 +45,18 @@ python in the process.
 
 Below are just a few few major points of comparison between GNU stow and Dploy.
 
-* Like GNU Stow Dploy runs in two passes. First by collecting the actions
+- Like GNU Stow Dploy runs in two passes. First by collecting the actions
   required to complete the command and verifying that the command can
   completed without any issues. If no issues are detected then the second
   pass executes these actions are execute to complete the command. Otherwise
   Dploy will exit and indicate why the command can not be completed. This way a
   stow or unstow operation is atomic and never partially done.
 
-* Like Stow, Dploy supports tree folding and tree unfolding.
+- Like Stow, Dploy supports tree folding and tree unfolding.
 
-* Unlike Stow, Dploy requires an explicit source(s) and a destination
+- Unlike Stow, Dploy requires an explicit source(s) and a destination
   directory.
 
-* Unlike Stow, Dploy does not have any concept of ownership, but will only
+- Unlike Stow, Dploy does not have any concept of ownership, but will only
   operate on symbolic links and the creation or removal of directories for these
   symbolic links.
