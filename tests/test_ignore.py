@@ -8,8 +8,9 @@ Tests for the ignore feature
 import os
 
 import dploy
+from dploy import main
 
-SUBCMD = "stow"
+SUBCMD = main.DploySubCommand.STOW
 
 
 def test_ignore_by_ignoring_everything(source_a: str, source_c: str, dest: str):

@@ -9,12 +9,12 @@ from dploy import cli
 assert sys.version_info >= (3, 3), "Requires Python 3.3 or Greater"
 
 
-def main():
+def main() -> int:
     """
     main entry point when using dploy from the command line
     """
-    cli.run()
+    return cli.run()
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

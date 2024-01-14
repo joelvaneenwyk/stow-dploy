@@ -11,10 +11,10 @@ import os
 import pytest
 
 import dploy
-from dploy import error
-from tests import utils
+from dploy import error, permissions
+import dploy.stowcmd
 
-SUBCMD = "unstow"
+SUBCMD = dploy.stowcmd.DploySubCommand.UNSTOW
 
 
 def test_unstow_with_basic_scenario(source_a, dest):
@@ -91,7 +91,7 @@ def test_unstow_with_file_as_source_and_dest(file_a, file_b):
 
 def test_unstow_with_read_only_dest(source_a, dest):
     dploy.stow([source_a], dest)
-    utils.remove_write_permission(dest)
+    permissions.remove_write_permission(dest)
     message = error.as_match(error.InsufficientPermissionsToSubcmdTo(subcmd=SUBCMD, file=dest))
     with pytest.raises(error.InsufficientPermissionsToSubcmdTo, match=message):
         dploy.unstow([source_a], dest)
@@ -99,23 +99,23 @@ def test_unstow_with_read_only_dest(source_a, dest):
 
 def test_unstow_with_read_only_dest_file(source_a, dest):
     dploy.stow([source_a], dest)
-    utils.remove_write_permission(os.path.join(dest, "aaa"))
+    permissions.remove_write_permission(os.path.join(dest, "aaa"))
     dploy.unstow([source_a], dest)
 
 
 def test_unstow_with_write_only_source(source_a, dest):
     dploy.stow([source_a], dest)
-    utils.remove_read_permission(source_a)
+    permissions.remove_read_permission(source_a)
     message = error.as_match(error.InsufficientPermissionsToSubcmdFrom(subcmd=SUBCMD, file=source_a))
     with pytest.raises(error.InsufficientPermissionsToSubcmdFrom, match=message):
         dploy.unstow([source_a], dest)
 
-    utils.add_read_permission(source_a)
+    permissions.add_read_permission(source_a)
 
 
 def test_unstow_with_dest_with_no_execute_permissions(source_a, dest):
     dploy.stow([source_a], dest)
-    utils.remove_execute_permission(dest)
+    permissions.remove_execute_permission(dest)
     message = error.as_match(error.InsufficientPermissionsToSubcmdTo(subcmd=SUBCMD, file=dest))
     with pytest.raises(error.InsufficientPermissionsToSubcmdTo, match=message):
         dploy.unstow([source_a], dest)
@@ -124,7 +124,7 @@ def test_unstow_with_dest_with_no_execute_permissions(source_a, dest):
 def test_unstow_with_dest_dir_with_no_execute_permissions(source_a, source_b, dest):
     dest_dir = os.path.join(dest, "aaa")
     dploy.stow([source_a, source_b], dest)
-    utils.remove_execute_permission(os.path.join(dest, "aaa"))
+    permissions.remove_execute_permission(os.path.join(dest, "aaa"))
     message = error.as_match(error.InsufficientPermissionsToSubcmdTo(subcmd=SUBCMD, file=dest_dir))
     with pytest.raises(error.InsufficientPermissionsToSubcmdTo, match=message):
         dploy.unstow([source_a, source_b], dest)
@@ -132,13 +132,13 @@ def test_unstow_with_dest_dir_with_no_execute_permissions(source_a, source_b, de
 
 def test_unstow_with_write_only_source_file(source_a, dest):
     dploy.stow([source_a], dest)
-    utils.remove_read_permission(os.path.join(source_a, "aaa", "aaa"))
+    permissions.remove_read_permission(os.path.join(source_a, "aaa", "aaa"))
     dploy.unstow([source_a], dest)
 
 
 def test_unstow_with_write_only_dest_file(source_a, dest):
     dploy.stow([source_a], dest)
-    utils.remove_read_permission(os.path.join(dest, "aaa"))
+    permissions.remove_read_permission(os.path.join(dest, "aaa"))
     dploy.unstow([source_a], dest)
 
 
@@ -197,7 +197,7 @@ def test_unstow_folding_with_multiple_sources_all_unstowed(source_a, source_b, d
 def test_unstow_folding_with_existing_file_in_dest(source_a, source_b, dest):
     os.makedirs(os.path.join(dest, "aaa"))
     a_file = os.path.join(dest, "aaa", "a_file")
-    utils.create_file(a_file)
+    permissions.create_file(a_file)
     dploy.stow([source_a, source_b], dest)
     dploy.unstow([source_a], dest)
     assert os.path.exists(a_file)
@@ -206,7 +206,7 @@ def test_unstow_folding_with_existing_file_in_dest(source_a, source_b, dest):
 @pytest.mark.skip(reason="Not working yet.")
 def test_unstow_folding_with_multiple_sources_with_execute_permission_unset(source_a, source_b, dest):
     dploy.stow([source_a, source_b], dest)
-    utils.remove_execute_permission(source_b)
+    permissions.remove_execute_permission(source_b)
     dest_dir = os.path.join(dest, "aaa", "ddd")
     message = error.as_match(error.PermissionDenied(subcmd=SUBCMD, file=dest_dir))
     with pytest.raises(error.PermissionDenied, match=message):

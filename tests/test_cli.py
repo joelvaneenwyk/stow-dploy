@@ -13,9 +13,9 @@ import pytest
 import dploy.cli
 
 
-def test_cli_with_stow_with_simple_scenario(source_only_files, dest, capsys):
+def test_cli_with_stow_with_simple_scenario(source_only_files: str, dest: str, capsys: pytest.CaptureFixture[str]):
     args = ["stow", source_only_files, dest]
-    dploy.cli.run(args)
+    assert dploy.cli.run(args) == 0
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_only_files", "aaa")
     out, _ = capsys.readouterr()
     d = os.path.join(dest, "aaa")
@@ -23,13 +23,13 @@ def test_cli_with_stow_with_simple_scenario(source_only_files, dest, capsys):
     assert out == "dploy stow: link {dest} => {source}\n".format(source=s, dest=d)
 
 
-def test_cli_unstow_with_basic_scenario(source_a, dest, capsys):
+def test_cli_unstow_with_basic_scenario(source_a: str, dest: str, capsys: pytest.CaptureFixture[str]):
     args_stow = ["stow", source_a, dest]
-    dploy.cli.run(args_stow)
+    assert dploy.cli.run(args_stow) == 0
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_a", "aaa")
 
     args_unstow = ["unstow", source_a, dest]
-    dploy.cli.run(args_unstow)
+    assert dploy.cli.run(args_unstow) == 0
     assert not os.path.exists(os.path.join(dest, "aaa"))
 
     out, _ = capsys.readouterr()
@@ -43,9 +43,9 @@ def test_cli_unstow_with_basic_scenario(source_a, dest, capsys):
     assert out == (expected_output)
 
 
-def test_cli_with_link_directory(source_a, dest, capsys):
+def test_cli_with_link_directory(source_a: str, dest: str, capsys: pytest.CaptureFixture[str]):
     args = ["link", source_a, os.path.join(dest, "source_a_link")]
-    dploy.cli.run(args)
+    assert dploy.cli.run(args) == 0
     assert os.path.islink(os.path.join(dest, "source_a_link"))
     output, _ = capsys.readouterr()
     expected_output_unformatted = "dploy link: link {dest} => {source}\n"
@@ -55,9 +55,11 @@ def test_cli_with_link_directory(source_a, dest, capsys):
     assert output == expected_output
 
 
-def test_cli_with_dry_run_option_with_stow_with_simple_scenario(source_only_files, dest, capsys):
+def test_cli_with_dry_run_option_with_stow_with_simple_scenario(
+    source_only_files: str, dest: str, capsys: pytest.CaptureFixture[str]
+):
     args = ["--dry-run", "stow", source_only_files, dest]
-    dploy.cli.run(args)
+    assert dploy.cli.run(args) == 0
     assert not os.path.exists(os.path.join(dest, "aaa"))
     out, _ = capsys.readouterr()
     d = os.path.join(dest, "aaa")
@@ -65,17 +67,19 @@ def test_cli_with_dry_run_option_with_stow_with_simple_scenario(source_only_file
     assert out == "dploy stow: link {dest} => {source}\n".format(source=s, dest=d)
 
 
-def test_cli_with_silent_option_with_stow_with_simple_scenario(source_only_files, dest, capsys):
+def test_cli_with_silent_option_with_stow_with_simple_scenario(
+    source_only_files: str, dest: str, capsys: pytest.CaptureFixture[str]
+):
     args = ["--silent", "stow", source_only_files, dest]
-    dploy.cli.run(args)
+    assert dploy.cli.run(args) == 0
     assert os.readlink(os.path.join(dest, "aaa")) == os.path.join("..", "source_only_files", "aaa")
     out, _ = capsys.readouterr()
     assert out == ""
 
 
-def test_cli_with_version_option(capsys):
+def test_cli_with_version_option(capsys: pytest.CaptureFixture[str]):
     args = ["--version"]
     with pytest.raises(SystemExit):
-        dploy.cli.run(args)
+        assert dploy.cli.run(args) == 0
         out, _ = capsys.readouterr()
         assert re.match(r"dploy \d+.\d+\.\d+(-\w+)?\n", out) is not None

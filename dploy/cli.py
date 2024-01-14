@@ -2,11 +2,11 @@
 The command line interface
 """
 
-import sys
 import argparse
-from dploy import linkcmd
-from dploy import stowcmd
-from dploy import version
+import sys
+from typing import Optional
+
+from dploy import linkcmd, stowcmd, version
 from dploy.error import DployError
 
 
@@ -23,7 +23,7 @@ def add_ignore_argument(parser):
     )
 
 
-def create_parser():
+def create_parser() -> argparse.ArgumentParser:
     """
     create the CLI argument parser
     """
@@ -66,7 +66,7 @@ def create_parser():
     return parser
 
 
-def run(arguments=None):
+def run(arguments: Optional[list[str]] = None) -> int:
     """
     interpret the parser arguments and execute the corresponding commands
     """
@@ -78,6 +78,7 @@ def run(arguments=None):
         "link": linkcmd.Link,
     }
 
+    return_code = 0
     try:
         parser = create_parser()
 
@@ -88,21 +89,22 @@ def run(arguments=None):
 
         if args.subcmd in subcmd_map:
             subcmd = subcmd_map[args.subcmd]
+
+            try:
+                subcmd(
+                    args.source,
+                    args.dest,
+                    is_silent=args.is_silent,
+                    is_dry_run=args.is_dry_run,
+                    ignore_patterns=args.ignore_patterns,
+                )
+            except DployError:
+                return_code = 1
         else:
             parser.print_help()
-            sys.exit(0)
-
-        try:
-            subcmd(
-                args.source,
-                args.dest,
-                is_silent=args.is_silent,
-                is_dry_run=args.is_dry_run,
-                ignore_patterns=args.ignore_patterns,
-            )
-        except DployError:
-            sys.exit(1)
-
+            return_code = 0
     except KeyboardInterrupt as error:
         print(error, file=sys.stderr)
-        sys.exit(130)
+        return_code = 130
+
+    return return_code

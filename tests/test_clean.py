@@ -8,8 +8,9 @@ Tests for the link sub command
 import os
 
 import dploy
+from dploy import main
 
-SUBCMD = "clean"
+SUBCMD = main.DploySubCommand.CLEAN
 
 
 def test_clean_with_simple_scenario(source_only_files, dest):

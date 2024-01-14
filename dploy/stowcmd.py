@@ -6,6 +6,7 @@ import pathlib
 from collections import Counter
 
 from dploy import actions, error, ignore, main, utils
+from dploy.main import DploySubCommand
 from dploy.utils import StowIgnorePatterns, StowPath, StowSources
 
 
@@ -19,7 +20,7 @@ class AbstractBaseStow(main.AbstractBaseSubCommand):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        subcmd: str,
+        subcmd: DploySubCommand,
         source: StowSources,
         dest: StowPath,
         is_silent: bool,
@@ -73,7 +74,7 @@ class AbstractBaseStow(main.AbstractBaseSubCommand):
         """
         pass
 
-    def _collect_actions_existing_dest(self, source, dest):
+    def _collect_actions_existing_dest(self, source: pathlib.Path, dest: pathlib.Path):
         """
         _collect_actions() helper to collect required actions to perform a stow
         command when the destination already exists
@@ -89,14 +90,13 @@ class AbstractBaseStow(main.AbstractBaseSubCommand):
         else:
             self.errors.add(error.ConflictsWithExistingFile(self.subcmd, source, dest))
 
-    def _collect_actions(self, source, dest):
+    def _collect_actions(self, source: pathlib.Path, dest: pathlib.Path):
         """
         Concrete method to collect required actions to perform a stow
         sub-command
         """
 
-        if self.ignore.should_ignore(source):
-            self.ignore.ignore(source)
+        if self.should_ignore(source):
             return
 
         if not StowInput(self.errors, self.subcmd).is_valid_collection_input(source, dest):
@@ -105,8 +105,7 @@ class AbstractBaseStow(main.AbstractBaseSubCommand):
         sources = self.get_directory_contents(source)
 
         for subsources in sources:
-            if self.ignore.should_ignore(subsources):
-                self.ignore.ignore(subsources)
+            if self.should_ignore(subsources):
                 continue
 
             dest_path = dest / pathlib.Path(subsources.name)
@@ -143,9 +142,9 @@ class Stow(AbstractBaseStow):
         is_dry_run: bool = False,
         ignore_patterns: StowIgnorePatterns = None,
     ):
-        super().__init__("stow", source, dest, is_silent, is_dry_run, ignore_patterns)
+        super().__init__(DploySubCommand.STOW, source, dest, is_silent, is_dry_run, ignore_patterns)
 
-    def _unfold(self, source, dest):
+    def _unfold(self, source: pathlib.Path, dest: pathlib.Path):
         """
         Method unfold a destination directory
         """
@@ -155,7 +154,7 @@ class Stow(AbstractBaseStow):
         self._collect_actions(source, dest)
         self.is_unfolding = False
 
-    def _handle_duplicate_actions(self):
+    def _handle_duplicate_actions(self) -> None:
         """
         check for symbolic link actions that would cause conflicting symbolic
         links to the same destination. Also check for actions that conflict but
@@ -168,8 +167,14 @@ class Stow(AbstractBaseStow):
             return
 
         for indices in dupes:
-            first_action = self.actions.actions[indices[0]]
-            remaining_actions = [self.actions.actions[i] for i in indices[1:]]
+            duplicates: list[actions.ActionSourceDestProtocol] = []
+            for i in indices:
+                duplicate_action = self.actions.actions[i]
+                if actions.is_action_with_source_and_destination(duplicate_action):
+                    duplicates.append(duplicate_action)
+
+            first_action = duplicates[0]
+            remaining_actions = duplicates[1:]
 
             if first_action.source.is_dir():
                 self._unfold(first_action.source, first_action.dest)
@@ -179,7 +184,7 @@ class Stow(AbstractBaseStow):
                     self._collect_actions(action.source, action.dest)
                     self.is_unfolding = False
             else:
-                duplicate_action_sources = [str(self.actions.actions[i].source) for i in indices]
+                duplicate_action_sources = [str(duplicate.source) for duplicate in duplicates]
                 self.errors.add(error.ConflictsWithAnotherSource(self.subcmd, duplicate_action_sources))
                 has_conflicts = True
 
@@ -222,7 +227,7 @@ class UnStow(AbstractBaseStow):
 
     # pylint: disable=too-many-arguments
     def __init__(self, source, dest, is_silent=True, is_dry_run=False, ignore_patterns=None):
-        super().__init__("unstow", source, dest, is_silent, is_dry_run, ignore_patterns)
+        super().__init__(DploySubCommand.UNSTOW, source, dest, is_silent, is_dry_run, ignore_patterns)
 
     def _are_same_file(self, source, dest):
         """
@@ -364,7 +369,7 @@ class Clean(main.AbstractBaseSubCommand):
         self.source = [pathlib.Path(s) for s in source]
         self.dest = pathlib.Path(dest)
         self.ignore_patterns = ignore_patterns
-        super().__init__("clean", source, dest, is_silent, is_dry_run, ignore_patterns)
+        super().__init__(DploySubCommand.CLEAN, source, dest, is_silent, is_dry_run, ignore_patterns)
 
     def _is_valid_input(self, sources, dest):
         """

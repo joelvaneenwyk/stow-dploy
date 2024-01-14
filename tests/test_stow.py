@@ -10,10 +10,10 @@ import os
 import pytest
 
 import dploy
-from dploy import error
-from tests import utils
+from dploy import error, permissions
+import dploy.stowcmd
 
-SUBCMD = "stow"
+SUBCMD = dploy.stowcmd.DploySubCommand.STOW
 
 
 def test_stow_with_simple_scenario(source_only_files, dest):
@@ -111,20 +111,20 @@ def test_stow_with_same_simple_directory_used_as_source_and_dest(source_only_fil
 
 
 def test_stow_with_read_only_dest(source_a, dest):
-    utils.remove_write_permission(dest)
+    permissions.remove_write_permission(dest)
     with pytest.raises(error.InsufficientPermissionsToSubcmdTo):
         dploy.stow([source_a], dest)
 
 
 def test_stow_with_write_only_source(source_a, source_c, dest):
-    utils.remove_read_permission(source_a)
+    permissions.remove_read_permission(source_a)
     message = error.as_match(error.InsufficientPermissionsToSubcmdFrom(subcmd=SUBCMD, file=source_a))
     with pytest.raises(error.InsufficientPermissionsToSubcmdFrom, match=message):
         dploy.stow([source_a, source_c], dest)
 
 
 def test_stow_with_source_with_no_execute_permissions(source_a, source_c, dest):
-    utils.remove_execute_permission(source_a)
+    permissions.remove_execute_permission(source_a)
     message = error.as_match(error.InsufficientPermissionsToSubcmdFrom(subcmd=SUBCMD, file=source_a))
     with pytest.raises(error.InsufficientPermissionsToSubcmdFrom, match=message):
         dploy.stow([source_a, source_c], dest)
@@ -132,7 +132,7 @@ def test_stow_with_source_with_no_execute_permissions(source_a, source_c, dest):
 
 def test_stow_with_source_dir_with_no_execute_permissions(source_a, source_c, dest):
     source_dir = os.path.join(source_a, "aaa")
-    utils.remove_execute_permission(source_dir)
+    permissions.remove_execute_permission(source_dir)
     message = error.as_match(error.InsufficientPermissionsToSubcmdFrom(subcmd=SUBCMD, file=source_dir))
     with pytest.raises(error.InsufficientPermissionsToSubcmdFrom, match=message):
         dploy.stow([source_a, source_c], dest)
@@ -140,7 +140,7 @@ def test_stow_with_source_dir_with_no_execute_permissions(source_a, source_c, de
 
 def test_stow_with_write_only_source_file(source_a, dest):
     source_file = os.path.join(source_a, "aaa")
-    utils.remove_read_permission(source_file)
+    permissions.remove_read_permission(source_file)
     dploy.stow([source_a], dest)
 
 
@@ -196,7 +196,7 @@ def test_stow_unfolding_with_multiple_sources(source_a, source_b, dest):
 @pytest.mark.skip(reason="Not working yet.")
 def test_stow_unfolding_with_first_sources_execute_permission_removed(source_a, source_b, dest):
     dploy.stow([source_a], dest)
-    utils.remove_execute_permission(source_a)
+    permissions.remove_execute_permission(source_a)
     dest_dir = os.path.join(dest, "aaa")
     message = error.as_match(error.PermissionDenied(subcmd=SUBCMD, file=dest_dir))
     with pytest.raises(error.PermissionDenied, match=message):
@@ -205,7 +205,7 @@ def test_stow_unfolding_with_first_sources_execute_permission_removed(source_a, 
 
 def test_stow_unfolding_with_write_only_source_file(source_a, source_b, dest):
     source_file = os.path.join(source_a, "aaa")
-    utils.remove_read_permission(source_file)
+    permissions.remove_read_permission(source_file)
 
     message = error.as_match(error.InsufficientPermissionsToSubcmdFrom(subcmd=SUBCMD, file=source_file))
     with pytest.raises(error.InsufficientPermissionsToSubcmdFrom, match=message):

@@ -4,95 +4,113 @@ commands
 """
 
 from collections import defaultdict
+from pathlib import Path
+from typing import Callable, Final, Protocol, TypeGuard, TypeVar, runtime_checkable
 
 from dploy import error, utils
+from dploy.main import DploySubCommand
+
+
+class AbstractBaseAction(Protocol):  # pylint: disable=too-few-public-methods
+    """An abstract base class that define the interface for actions."""
+
+    execute: Callable[[], None]
+    """Function that executes the logic of each concrete action.    """
+
+
+@runtime_checkable
+class ActionSourceProtocol(Protocol):
+    """Action needing a source."""
+
+    source: Path
+
+
+@runtime_checkable
+class ActionDestinationProtocol(Protocol):
+    """Action that requires destination."""
+
+    dest: Path
+
+
+@runtime_checkable
+class ActionTargetProtocol(Protocol):
+    """Action that needs a target path."""
+
+    target: Path
+
+
+@runtime_checkable
+class ActionSourceDestProtocol(ActionSourceProtocol, ActionDestinationProtocol, Protocol):
+    """Action that requires destination."""
+
+    dest: Path
+
+
+T = TypeVar("T", bound=AbstractBaseAction)  # Declare type variable "U"
+
+
+def is_action_with_source_and_destination(action: AbstractBaseAction) -> TypeGuard[ActionSourceDestProtocol]:
+    """Gets an action"""
+    return isinstance(action, ActionSourceDestProtocol)
 
 
 class Actions:
-    """
-    A class that collects and executes action objects
-    """
+    """Collects and executes actions."""
 
-    def __init__(self, is_silent, is_dry_run):
-        self.actions = []
-        self.is_silent = is_silent
-        self.is_dry_run = is_dry_run
+    def __init__(self, is_silent: bool, is_dry_run: bool):
+        self.actions: list[AbstractBaseAction] = []
+        self.is_silent: Final[bool] = is_silent
+        self.is_dry_run: Final[bool] = is_dry_run
 
-    def add(self, action):
-        """
-        Adds an action
-        """
+    def add(self, action: AbstractBaseAction):
+        """Adds an action"""
         self.actions.append(action)
 
-    def execute(self):
-        """
-        Prints and executes actions
-        """
+    def execute(self) -> None:
+        """Prints and executes actions"""
         for action in self.actions:
             if not self.is_silent:
                 print(action)
             if not self.is_dry_run:
                 action.execute()
 
-    def get_unlink_actions(self):
-        """
-        get the current Unlink() actions from the self.actions
-        """
+    def get_unlink_actions(self) -> list["UnLink"]:
+        """get the current Unlink() actions from the self.actions"""
         return [a for a in self.actions if isinstance(a, UnLink)]
 
-    def get_unlink_target_parents(self):
-        """
-        Get list of the parents for the current Unlink() actions from
+    def get_unlink_target_parents(self) -> list[Path]:
+        """Get list of the parents for the current Unlink() actions from
         self.actions
         """
         unlink_actions = self.get_unlink_actions()
         # sort for deterministic output
         return sorted({a.target.parent for a in unlink_actions})
 
-    def get_unlink_targets(self):
-        """
-        Get list of the targets for the current Unlink() actions from
+    def get_unlink_targets(self) -> list[Path]:
+        """Get list of the targets for the current Unlink() actions from
         self.actions
         """
         unlink_actions = self.get_unlink_actions()
         return [a.target for a in unlink_actions]
 
-    def get_duplicates(self):
-        """
-        return a tuple containing tuples with the following structure
+    def get_duplicates(self) -> list[list[int]]:
+        """return a tuple containing tuples with the following structure
         (link destination, [indices of duplicates])
         """
-        tally = defaultdict(list)
+        tally: dict[Path, list[int]] = defaultdict(list)
         for index, action in enumerate(self.actions):
             if isinstance(action, SymbolicLink):
-                tally[action.dest].append(index)
+                destination = action.dest
+                tally[destination].append(index)
         # sort for deterministic output
         return sorted([indices for _, indices in tally.items() if len(indices) > 1])
 
 
-class AbstractBaseAction:
+class SymbolicLink(AbstractBaseAction, ActionSourceProtocol, ActionDestinationProtocol):
     # pylint: disable=too-few-public-methods
-    """
-    An abstract base class that define the interface for actions
-    """
+    """Action to create a symbolic link relative to the source of the link"""
 
-    def __init__(self):
-        pass
-
-    def execute(self):
-        """
-        function that executes the logic of each concrete action
-        """
-        pass
-
-
-class SymbolicLink(AbstractBaseAction):
-    # pylint: disable=too-few-public-methods
-    """
-    Action to create a symbolic link relative to the source of the link
-    """
-
-    def __init__(self, subcmd, source, dest):
+    def __init__(self, subcmd: DploySubCommand, source: Path, dest: Path):
         super().__init__()
         self.source = source
         self.source_relative = utils.get_relative_path(source, dest.parent)
@@ -111,13 +129,11 @@ class SymbolicLink(AbstractBaseAction):
         )
 
 
-class AlreadyLinked(AbstractBaseAction):
+class AlreadyLinked(AbstractBaseAction, ActionSourceProtocol, ActionDestinationProtocol):
     # pylint: disable=too-few-public-methods
-    """
-    Action to used to print an already linked message
-    """
+    """Action to used to print an already linked message"""
 
-    def __init__(self, subcmd, source, dest):
+    def __init__(self, subcmd: DploySubCommand, source: Path, dest: Path):
         super().__init__()
         self.source = source
         self.source_relative = utils.get_relative_path(source, dest.parent)
@@ -133,13 +149,11 @@ class AlreadyLinked(AbstractBaseAction):
         )
 
 
-class AlreadyUnlinked(AbstractBaseAction):
+class AlreadyUnlinked(AbstractBaseAction, ActionSourceProtocol, ActionDestinationProtocol):
     # pylint: disable=too-few-public-methods
-    """
-    Action to used to print an already unlinked message
-    """
+    """Action to used to print an already unlinked message"""
 
-    def __init__(self, subcmd, source, dest):
+    def __init__(self, subcmd: DploySubCommand, source: Path, dest: Path):
         super().__init__()
         self.source = source
         self.source_relative = utils.get_relative_path(source, dest.parent)
@@ -155,13 +169,11 @@ class AlreadyUnlinked(AbstractBaseAction):
         )
 
 
-class UnLink(AbstractBaseAction):
+class UnLink(AbstractBaseAction, ActionTargetProtocol):
     # pylint: disable=too-few-public-methods
-    """
-    Action to unlink a symbolic link
-    """
+    """Action to unlink a symbolic link"""
 
-    def __init__(self, subcmd, target):
+    def __init__(self, subcmd: DploySubCommand, target: Path):
         super().__init__()
         self.target = target
         self.subcmd = subcmd
@@ -182,11 +194,9 @@ class UnLink(AbstractBaseAction):
         )
 
 
-class MakeDirectory(AbstractBaseAction):
+class MakeDirectory(AbstractBaseAction, ActionTargetProtocol):
     # pylint: disable=too-few-public-methods
-    """
-    Action to create a directory
-    """
+    """Action to create a directory"""
 
     def __init__(self, subcmd, target):
         super().__init__()
@@ -200,13 +210,11 @@ class MakeDirectory(AbstractBaseAction):
         return "dploy {subcmd}: make directory {target}".format(target=self.target, subcmd=self.subcmd)
 
 
-class RemoveDirectory(AbstractBaseAction):
+class RemoveDirectory(AbstractBaseAction, ActionTargetProtocol):
     # pylint: disable=too-few-public-methods
-    """
-    Action to remove a directory
-    """
+    """Action to remove a directory"""
 
-    def __init__(self, subcmd, target):
+    def __init__(self, subcmd: DploySubCommand, target: Path):
         super().__init__()
         self.target = target
         self.subcmd = subcmd
