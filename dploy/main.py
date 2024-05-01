@@ -2,11 +2,11 @@
 The logic and workings behind the stow and unstow sub-commands
 """
 
-from collections import defaultdict
 import pathlib
-from dploy import actions
-from dploy import error
-from dploy import ignore
+from collections import defaultdict
+
+from dploy import actions, error, ignore
+from dploy.utils import StowIgnorePatterns, StowPath, StowSources
 
 
 # pylint: disable=too-few-public-methods
@@ -71,7 +71,15 @@ class AbstractBaseSubCommand:
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, subcmd, sources, dest, is_silent, is_dry_run, ignore_patterns):
+    def __init__(
+        self,
+        subcmd: str,
+        sources: StowSources,
+        dest: StowPath,
+        is_silent: bool,
+        is_dry_run: bool,
+        ignore_patterns: StowIgnorePatterns,
+    ):
         self.subcmd = subcmd
 
         self.actions = actions.Actions(is_silent, is_dry_run)

@@ -1,7 +1,9 @@
 """
 Module for the --ignore IGNORE_PATTERN flag and .dploystowignore file
 """
+
 import pathlib
+
 from dploy import utils
 
 
@@ -29,8 +31,8 @@ class Ignore:
         read ignore patterns from a specified file
         """
         try:
-            with open(str(file)) as afile:
-                file_patterns = afile.read().splitlines()
+            with open(str(file), "r", encoding="utf8") as input_file:
+                file_patterns = input_file.read().splitlines()
                 self.patterns.extend(file_patterns)
         except FileNotFoundError:
             pass

@@ -1,0 +1,12 @@
+# Custom Dictionary Words
+codeql
+conftest
+makedirs
+pathlib
+pyenv
+pyfilesystem
+pylint
+Pylint
+pyproject
+USERPROFILE
+xdist

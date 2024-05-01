@@ -1,0 +1,11 @@
+version: "0.2"
+ignorePaths: []
+dictionaryDefinitions:
+  - name: cspell-stow-dploy
+    path: ./.vscode/cspell-stow-dploy.txt
+    addWords: true
+dictionaries:
+  - cspell-stow-dploy
+words: []
+ignoreWords: []
+import: []

@@ -22,4 +22,7 @@ else:
 # Single-sourcing the version from pyproject.toml
 # https://packaging.python.org/guides/single-sourcing-package-version/
 
-__version__ = metadata.version("dploy")
+try:
+    __version__ = metadata.version("dploy")
+except metadata.PackageNotFoundError:
+    __version__ = "unknown"

@@ -4,7 +4,8 @@ commands
 """
 
 from collections import defaultdict
-from dploy import utils
+
+from dploy import error, utils
 
 
 class Actions:
@@ -46,7 +47,7 @@ class Actions:
         """
         unlink_actions = self.get_unlink_actions()
         # sort for deterministic output
-        return sorted(set([a.target.parent for a in unlink_actions]))
+        return sorted({a.target.parent for a in unlink_actions})
 
     def get_unlink_targets(self):
         """
@@ -99,7 +100,10 @@ class SymbolicLink(AbstractBaseAction):
         self.dest = dest
 
     def execute(self):
-        self.dest.symlink_to(self.source_relative)
+        try:
+            self.dest.symlink_to(self.source_relative)
+        except PermissionError as permission_error:
+            raise error.InsufficientPermissionsToSubcmdTo(self.subcmd, self.dest) from permission_error
 
     def __repr__(self):
         return "dploy {subcmd}: link {dest} => {source}".format(
@@ -193,9 +197,7 @@ class MakeDirectory(AbstractBaseAction):
         self.target.mkdir()
 
     def __repr__(self):
-        return "dploy {subcmd}: make directory {target}".format(
-            target=self.target, subcmd=self.subcmd
-        )
+        return "dploy {subcmd}: make directory {target}".format(target=self.target, subcmd=self.subcmd)
 
 
 class RemoveDirectory(AbstractBaseAction):

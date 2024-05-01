@@ -1,0 +1,68 @@
+#
+# stow-dploy | GitHub Action | Python Package
+#
+# This workflow will install Python dependencies, run tests and lint with a
+# variety of Python versions. For more information see:
+#
+#    - https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+#
+
+name: Python package
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        poetry-version: ["1.7.1"]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: ${{ matrix.poetry-version }}
+
+      - name: Setup Poetry Config
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+
+      - name: Install Local Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Python Dependencies
+        run: |
+          poetry run pip install --upgrade setuptools wheel pytest-github-actions-annotate-failures
+
+      - name: Install Package
+        run: |
+          poetry install --no-interaction --with dev
+
+      - name: Test Python
+        run: poetry run pytest
+
+      - name: Invoke All Tasks
+        run: |
+          poetry run invoke all

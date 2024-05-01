@@ -2,17 +2,21 @@
 Contains the fixtures used by the dploy tests
 """
 
+from pathlib import Path
+from typing import Generator
+
 import pytest
+
 from tests import utils
 
 
 @pytest.fixture()
-def source_a(tmpdir):
+def source_a(tmp_path: Path) -> Generator[str, None, None]:
     """
     a source directory to stow and unstow
     """
-    name = str(tmpdir.join("source_a"))
-    tree = [
+    name = str(tmp_path / "source_a")
+    tree: utils.StowTree = [
         {
             name: [
                 {
@@ -28,20 +32,20 @@ def source_a(tmpdir):
                     ],
                 },
             ],
-        },
+        }
     ]
     utils.create_tree(tree)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def source_b(tmpdir):
+def source_b(tmp_path: Path) -> Generator[str, None, None]:
     """
     a source directory to stow and unstow
     """
-    name = str(tmpdir.join("source_b"))
-    tree = [
+    name = str(tmp_path / "source_b")
+    tree: utils.StowTree = [
         {
             name: [
                 {
@@ -61,16 +65,16 @@ def source_b(tmpdir):
     ]
     utils.create_tree(tree)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def source_d(tmpdir):
+def source_d(tmp_path: Path) -> Generator[str, None, None]:
     """
     a source directory to stow and unstow
     """
-    name = str(tmpdir.join("source_d"))
-    tree = [
+    name = str(tmp_path / "source_d")
+    tree: utils.StowTree = [
         {
             name: [
                 {
@@ -90,16 +94,16 @@ def source_d(tmpdir):
     ]
     utils.create_tree(tree)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def source_c(tmpdir):
+def source_c(tmp_path: Path) -> Generator[str, None, None]:
     """
     a source directory to stow and unstow identical to source_a
     """
-    name = str(tmpdir.join("source_c"))
-    tree = [
+    name = str(tmp_path / "source_c")
+    tree: utils.StowTree = [
         {
             name: [
                 {
@@ -119,16 +123,16 @@ def source_c(tmpdir):
     ]
     utils.create_tree(tree)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def source_only_files(tmpdir):
+def source_only_files(tmp_path: Path) -> Generator[str, None, None]:
     """
     a source directory to stow and unstow that only contains files
     """
-    name = str(tmpdir.join("source_only_files"))
-    tree = [
+    name = str(tmp_path / "source_only_files")
+    tree: utils.StowTree = [
         {
             name: [
                 "aaa",
@@ -137,45 +141,39 @@ def source_only_files(tmpdir):
     ]
     utils.create_tree(tree)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def dest(tmpdir):
+def dest(tmp_path: Path) -> Generator[str, None, None]:
     """
     a destination directory to stow into or unstow from
     """
-    name = str(tmpdir.join("dest"))
+    name = str(tmp_path.joinpath("dest"))
     utils.create_directory(name)
     yield name
-    utils.restore_tree_permissions(tmpdir)
+    utils.restore_tree_permissions(tmp_path)
 
 
 @pytest.fixture()
-def file_a(tmpdir):
+def file_a(tmp_path: Path) -> str:
     """
     creates a file
     """
-    name = str(tmpdir.join("file_a"))
-    utils.create_file(name)
-    return name
+    return utils.create_file(tmp_path.joinpath("file_a"))
 
 
 @pytest.fixture()
-def file_b(tmpdir):
+def file_b(tmp_path: Path) -> str:
     """
     creates a file
     """
-    name = str(tmpdir.join("file_b"))
-    utils.create_file(name)
-    return name
+    return utils.create_file(tmp_path.joinpath("file_b"))
 
 
 @pytest.fixture()
-def file_dploystowignore(tmpdir):
+def file_dploystowignore(tmp_path: Path) -> str:
     """
     creates an empty ignore file file
     """
-    name = str(tmpdir.join(".dploystowignore"))
-    utils.create_file(name)
-    return name
+    return utils.create_file(tmp_path.joinpath(".dploystowignore"))
