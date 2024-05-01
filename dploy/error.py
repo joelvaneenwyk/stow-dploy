@@ -1,6 +1,7 @@
 """
 All the exceptions and their messages used by the program
 """
+
 import re
 import sys
 
