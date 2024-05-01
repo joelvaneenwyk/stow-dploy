@@ -1,0 +1,11 @@
+# Custom Dictionary Words
+conftest
+makedirs
+pathlib
+pyenv
+pyfilesystem
+pylint
+Pylint
+pyproject
+USERPROFILE
+xdist
