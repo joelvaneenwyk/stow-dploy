@@ -1,6 +1,7 @@
 # `stow-dploy`
 
-> This is a fork of [dploy](https://github.com/arecarn/dploy) by [arecarn (Ryan Carney)](https://github.com/arecarn). See [CHANGELOG](./CHANGELOG.md) for list of differences in this repository.
+> [!IMPORTANT]
+> This is a **fork** of [dploy](https://github.com/arecarn/dploy) by [Ryan Carney (`arecarn`)](https://github.com/arecarn). It is renamed `stow-dpoy` to align with the related [stow](https://github.com/joelvaneenwyk/stow) project which itself is a fork of [GNU Stow](https://www.gnu.org/software/stow/). See [CHANGELOG](./CHANGELOG.md) for list of differences in this **fork**.
 
 `stow-dploy` is a tool for creating symbolic links similarly to [GNU Stow](https://www.gnu.org/software/stow/). It is provided as a CLI tool and Python >=3.9 module that supports Windows, Linux, and macOS.
 
