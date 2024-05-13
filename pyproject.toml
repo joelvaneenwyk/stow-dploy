@@ -30,7 +30,7 @@ dploy = "dploy.__main__:main"
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
 importlib-metadata = ">=1.0.0"
-poetry = "^1.8.2"
+poetry = "^1.8.3"
 
 [tool.poetry.dependencies.win32security]
 platform = "win32"
